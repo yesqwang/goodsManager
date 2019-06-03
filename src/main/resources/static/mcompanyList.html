@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>公司总表</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<body>
+    <div>
+        <button class="layui-btn layui-btn-normal" onclick="addCompany()">添加公司</button>
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</body>
+
+<!-- 弹出层：新增用户 -->
+<div id="addUserPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <label class="layui-form-label">公司名称</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="companyName" id="companyName" placeholder="请输入公司名称" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">联系人</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="userName" id="userName" placeholder="请输入公司联系人" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">联系电话</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="userPhone" id="userPhone" placeholder="请输入联系人电话" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="toAdd">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 行工具栏 -->
+<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-xs" lay-event="delete">删除</a>
+</script>
+<!--加载组件-->
+<script>
+    var currentLayer;
+    var tableIns;
+    var table;
+    var layer;
+    var form;
+    layui.use(['table','form','layer'], function(){
+        table = layui.table;
+        layer = layui.layer;
+        form = layui.form;
+
+        //第一个实例
+        tableIns = table.render({
+            elem: '#demo'
+            ,height: 'full-50'
+            ,url: 'gmanager/getCompanyList' //数据接口
+            ,id: 'alist'
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {type:'numbers', title: '序号', width:'5%'}
+                ,{field:'id', hide:true}
+                ,{field: 'companyName', title: '公司名称', width:'30%',edit:'text',sort: true}
+                ,{field: 'userName', title: '联系人', width:'20%',edit:'text',sort: true}
+                ,{field: 'userPhone', title: '联系电话', width:'40%',edit:'text', sort: true}
+                ,{title: '操作', width: 135, toolbar: '#itemBar', width:'5%',fixed: 'right'}
+            ]]
+        });
+
+        //监听表格排序
+        table.on('sort(test)', function(obj){
+            console.log(obj.field);
+            console.log(obj.type);
+            table.reload('alist', {
+                initSort: obj
+                ,where: {
+                    field: obj.field
+                    ,order: obj.type
+                }
+            });
+        });
+
+        //监听行工具栏
+        table.on('tool(test)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event;
+            if(layEvent == 'delete'){ //删除
+                layer.confirm('真的删除行么', function(index){
+                    $.ajax({
+                        url : "gmanager/deleteCompany",
+                        type : 'post',
+                        dataType : 'json',
+                        data: {
+                            id: data.id
+                        },
+                        success : function(ret) {
+                            console.log(ret);
+                            if (ret){
+                                layer.msg("删除成功！");
+                                tableIns.reload({});
+                                layer.close(currentLayer);
+                            } else {
+                                layer.msg("出错了，删除失败");
+                            }
+                        },
+                        error : function(prm1, prm2, prm3) {
+                            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+        });
+
+        table.on('edit(test)', function(obj){
+            console.log(obj.value); //得到修改后的值
+            console.log(obj.field); //当前编辑的字段名
+            console.log(obj.data); //所在行的所有相关数据
+            $.ajax({
+                url : "gmanager/editCompany",
+                type : 'post',
+                dataType : 'json',
+                data: obj.data,
+                success : function(ret) {
+                    console.log(ret);
+                    if (ret){
+                        layer.msg("修改成功！");
+                        tableIns.reload({});
+                        layer.close(currentLayer);
+                    } else {
+                        layer.msg("出错了，修改失败");
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+        });
+
+        //新增用户
+        form.on('submit(toAdd)', function(data){
+            console.log(data.field);
+            $.ajax({
+                url : "gmanager/addCompany",
+                type : 'post',
+                dataType : 'json',
+                data: data.field,
+                success : function(ret) {
+                    console.log(ret);
+                    if (ret){
+                        layer.msg("添加成功！");
+                        tableIns.reload({});
+                        layer.close(currentLayer);
+                    } else {
+                        layer.msg("出错了，添加失败");
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+            return false;
+        });
+    });
+
+</script>
+
+<script>
+    //弹出新增用户窗口
+    function addCompany() {
+        currentLayer = layer.open({
+            type: 1,
+            title: '添加采购公司信息',
+            area: ['650px', '300px'],
+            content: layui.$('#addUserPanel')
+        });
+    }
+</script>
+</html>

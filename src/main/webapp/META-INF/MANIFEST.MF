@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Implementation-Title: goods
+Implementation-Version: 0.0.1-SNAPSHOT
+Built-By: ￧ﾎﾋ￤ﾸﾚ￦ﾝﾃ
+Implementation-Vendor-Id: graduation.project
+Created-By: Apache Maven 3.3.9
+Build-Jdk: 1.8.0_181
+

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>库存表</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    .layerPanel{
+        padding: 20px;
+        text-align: center;
+    }
+</style>
+<body>
+    <div class="layui-row">
+        <div class="layui-col-xs5 layui-col-sm5 layui-col-md5" style="padding-left: 20px;">
+            <button class="layui-btn" onclick="showAdding()">手动添加库存</button>
+            <button class="layui-btn" onclick="javascript:layer.alert('功能尚未完成');">模板批量添加</button>
+            <a href="javascript:layer.alert('功能尚未完成');">模板表下载</a>
+        </div>
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6" style="text-align: right; padding-right: 20px;">
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 400px;">
+                    <input type="text" id="searchText" placeholder="根据物品名称模糊查询" class="layui-input">
+                </div>
+                <div class="layui-input-inline" style="width: 100px;">
+                    <button class="layui-btn layui-btn-warm" onclick="search()">搜索</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</body>
+
+<!-- 弹出层：手动添加申请 -->
+<div id="addStorePanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsName" placeholder="物品名称" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">类别</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsKind" placeholder="类别" class="layui-input" list="kinds"/>
+                    <datalist id="kinds"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">品牌</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsBrand" list="brands" placeholder="物品类别" autocomplete="off" class="layui-input">
+                    <datalist id="brands"></datalist>
+                </div>
+                <div class="layui-form-mid">型号</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsModel" placeholder="物品型号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">规格参数</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="goodsPram" required lay-verify="required" placeholder="规格参数" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <!--<div class="layui-form-label">使用对象</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <div class="layui-input-block" style="margin-left: 0px;">
+                        <select name="whoUses" id="whoUses" lay-filter="whoUse" lay-verify="required"></select>
+                    </div>
+                </div>-->
+                <label class="layui-form-label">数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" name="goodsNumber" placeholder="采购数量" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">单位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsUnit" list="units" placeholder="物品单位" autocomplete="off" class="layui-input">
+                    <datalist id="units"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <textarea name="note" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="toAddStore">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- 弹出层：修改参数 -->
+<div id="editStorePanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="egname" name="goodsName" placeholder="物品名称" autocomplete="off" class="layui-input">
+                    <input type="hidden" name="goodsId" id="egid" value="0"/>
+                </div>
+                <div class="layui-form-mid">类别</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="egkind" name="goodsKind" placeholder="类别" class="layui-input" list="kinds"/>
+                    <datalist id="gkinds"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">品牌</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="egbrand" name="goodsBrand" list="brands" placeholder="品牌" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">型号</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="egmodel" name="goodsModel" placeholder="物品型号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">规格参数</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="goodsPram" id="egpram" required lay-verify="required" placeholder="规格参数" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="egnumber" name="goodsNumber" placeholder="采购数量" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">单位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="egunit" name="goodsUnit" list="units" placeholder="物品单位" autocomplete="off" class="layui-input">
+                    <datalist id="gunits"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <textarea name="note" id="egnote" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="toEditStore">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+<!-- 弹出层：借出 -->
+<div id="borrowPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bGoodsName" name="goodsName" placeholder="物品名称" class="layui-input" disabled>
+                    <input type="hidden" name="goodsId" id="bgid" value="0"/>
+                </div>
+                <div class="layui-form-mid">库存量</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="bGoodsNumber" name="goodsNumber" placeholder="最多可借出数量" class="layui-input" disabled/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">使用人</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bUser" name="goodsName" placeholder="使用人姓名" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">经手人</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bBorrower" name="goodsKind" placeholder="经手人姓名" class="layui-input" />
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">借出数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="bNumber" name="bNumber" placeholder="本次借出数量" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">单&nbsp;&nbsp;&nbsp;位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bUnit" name="bUnit" placeholder="单位" class="layui-input" list="kinds" disabled/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">应还日期</label>
+            <div class="layui-input-inline" style="width: 200px;">
+                <input type="text" id="wrDate" name="wrDate" placeholder="应还日期" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+    <div style="text-align: center;">
+        <button class="layui-btn layui-btn-primary" onclick="submitBorrow()">确定借出</button>
+    </div>
+</div>
+<!-- 弹出层：领出 -->
+<div id="givePanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="gGoodsName" name="goodsName" placeholder="物品名称" class="layui-input" disabled>
+                    <input type="hidden" name="goodsId" id="ggid" value="0"/>
+                </div>
+                <div class="layui-form-mid">库存量</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="gGoodsNumber" name="goodsNumber" placeholder="最多可借出数量" class="layui-input" disabled/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">使用人</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="gUser" name="goodsName" placeholder="使用人姓名" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">经手人</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="gBorrower" name="goodsKind" placeholder="经手人姓名" class="layui-input"/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">借出数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="gNumber" name="bNumber" placeholder="本次借出数量" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">单&nbsp;&nbsp;&nbsp;位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="gUnit" name="bUnit" placeholder="单位" class="layui-input" list="kinds" disabled/>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div style="text-align: center;">
+        <button class="layui-btn layui-btn-primary" onclick="submitGive()">确定领出</button>
+    </div>
+</div>
+<!-- 弹出层：报废物品 -->
+<div id="scrapPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="sGoodsName" name="goodsName" placeholder="物品名称" class="layui-input" disabled>
+                    <input type="hidden" name="goodsId" id="sgid" value="0"/>
+                </div>
+                <div class="layui-form-mid">库存量</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="sGoodsNumber" name="goodsNumber" placeholder="最多可报废数量" class="layui-input" disabled/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">报废数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="sNumber" name="bNumber" placeholder="本次报废数量" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">单&nbsp;&nbsp;&nbsp;位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="sUnit" name="bUnit" placeholder="单位" class="layui-input" list="kinds" disabled/>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div style="text-align: center;">
+        <button class="layui-btn layui-btn-primary" onclick="scrapGoods()">确定报废</button>
+    </div>
+</div>
+<!-- 行工具栏 -->
+<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="borrowIt">借出</a>
+    <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="giveIt">领出</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="scrap">报废</a>
+</script>
+<!-- Ajax初始化弹出层界面 -->
+<script>
+    //获取物品类型
+    $.ajax({
+        url : "initPage/getAllGoodsKinds",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var kinds = document.getElementById('kinds');
+            kinds.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                kinds.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品品牌
+    $.ajax({
+        url : "initPage/getAllGoodsBrands",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var brands = document.getElementById('brands');
+            brands.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                brands.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品单位
+    $.ajax({
+        url : "initPage/getAllGoodsUnit",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var units = document.getElementById('units');
+            units.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                units.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+</script>
+<!--加载组件-->
+<script>
+    var tableIns ;
+    var layer;
+    var currentLayer;
+    layui.use(['table','form','layer','laydate'], function(){
+        var table = layui.table;
+        layer = layui.layer;
+        var laydate = layui.laydate;
+
+        //初始化表格
+        tableIns = table.render({
+            elem: '#demo'
+            ,height: 'full-50'
+            ,url: 'normal/getGoodsSotreList' //数据接口
+            ,page: true //开启分页
+            ,id : 'alist'
+            ,cols: [[ //表头
+                {type: 'numbers', title: '序号', width:'5%', fixed: 'left'}
+                ,{field: 'goodsName', title: '物品名称', width:'10%'}
+                ,{field: 'goodsKind', title: '类别', width:'8%', sort: true}
+                ,{field: 'goodsBrand', title: '品牌', width:'8%', sort: true}
+                ,{field: 'goodsModel', title: '型号', width: '15%', sort: true}
+                ,{field: 'goodsPram', title: '规格参数', width: '15%', sort: true}
+                ,{field: 'goodsUnit', title: '单位', width: '7%', sort: true}
+                ,{field: 'goodsNumber', title: '库存量', width: '7%', sort: true}
+                ,{field: 'giveNumber', title: '领数', width: '5%', sort: true}
+                ,{field: 'borrowNumber', title: '借数', width: '5%', sort: true}
+                ,{title: '操作', width: 135, toolbar: '#itemBar', width:'15%',fixed: 'right'}
+            ]]
+        });
+
+        table.on('sort(test)', function(obj){
+            console.log(obj.field);
+            console.log(obj.type);
+
+            table.reload('alist', {
+                initSort: obj
+                ,where: {
+                    field: obj.field
+                    ,order: obj.type
+                }
+            });
+            l//ayer.msg('服务端排序。order by '+ obj.field + ' ' + obj.type);
+        });
+
+        //行工具栏监听
+        table.on('tool(test)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+
+            if(layEvent === 'borrowIt'){
+                showBorrowPanel(data);
+            } else if(layEvent === 'giveIt'){
+                showGivePanel(data);
+            }else if(layEvent === 'scrap'){
+                showScrapPanel(data);
+            }
+        });
+        //提交添加库存
+        var form = layui.form;
+        form.on('submit(toAddStore)', function(data){
+            //layer.msg(JSON.stringify(data.field));
+            layui.$.post("gmanager/addStore",data.field,function(res){
+                console.log(res);
+                if(res){
+                    layer.msg("添加成功！");
+                    tableIns.reload({});
+                    layer.close(currentLayer);
+                }
+            },'json');
+            return false;
+        });
+        //提交编辑库存
+        form.on('submit(toEditStore)', function(data){
+            //layer.msg(JSON.stringify(data.field));
+            layui.$.post("gmanager/editStore",data.field,function(res){
+                console.log(res);
+                if(res){
+                    layer.msg("修改成功！");
+                    tableIns.reload({});
+                }
+            },'json');
+            return false;
+        });
+
+        //日期选择
+        laydate.render({
+            elem: '#wrDate' //指定元素
+        });
+    });
+</script>
+<!-- 功能 -->
+<script>
+    function search() {
+        var text = document.getElementById('searchText').value;
+        tableIns.reload({
+            where:{search: text}
+        })
+    }
+
+    //弹出手动添加物品弹出层
+    function showAdding() {
+        currentLayer = layer.open({
+            type: 1,
+            title: '新增申请',
+            area: ['700px', '500px'],
+            content: layui.$('#addStorePanel')
+        });
+    }
+
+    //打开借出窗口
+    function showBorrowPanel(data) {
+        document.getElementById('bGoodsName').value = data.goodsName;
+        document.getElementById('bgid').value = data.goodsId;
+        document.getElementById('bUnit').value = data.goodsUnit;
+        document.getElementById('bGoodsNumber').value = data.goodsNumber;
+        currentLayer = layer.open({
+            type: 1,
+            title: '借出登记',
+            area: ['600px', '350px'],
+            content: layui.$('#borrowPanel')
+        });
+    }
+    //领取登记
+    function showGivePanel(data) {
+        document.getElementById('gGoodsName').value = data.goodsName;
+        document.getElementById('ggid').value = data.goodsId;
+        document.getElementById('gUnit').value = data.goodsUnit;
+        document.getElementById('gGoodsNumber').value = data.goodsNumber;
+        currentLayer = layer.open({
+            type: 1,
+            title: '领出登记',
+            area: ['600px', '300px'],
+            content: layui.$('#givePanel')
+        });
+    }
+    //打开报废物品窗口
+    function showScrapPanel(data) {
+        document.getElementById('sGoodsName').value = data.goodsName;
+        document.getElementById('sgid').value = data.goodsId;
+        document.getElementById('sUnit').value = data.goodsUnit;
+        document.getElementById('sGoodsNumber').value = data.goodsNumber;
+        currentLayer = layer.open({
+            type: 1,
+            title: '物品报废',
+            area: ['600px', '250px'],
+            content: layui.$('#scrapPanel')
+        });
+    }
+
+    //借出判断
+    function submitBorrow() {
+        var gid = document.getElementById('bgid').value;
+        var gnumber = document.getElementById('bNumber').value;//借出数量
+        var guser = document.getElementById('bUser').value;//使用人
+        var gbuser = document.getElementById('bBorrower').value;//经手人
+        var gallNuber = document.getElementById('bGoodsNumber').value;//库存数
+        var date = document.getElementById('wrDate').value;
+        if(gnumber > gallNuber){
+            layer.msg("借出数量不能大于库存量");
+            return;
+        }
+        borrowOrGive(true,gid, gnumber,guser,gbuser,date);
+    }
+    //领取判断
+    function submitGive() {
+        var gid = document.getElementById('ggid').value;
+        var gnumber = document.getElementById('gNumber').value;//领取数量
+        var guser = document.getElementById('gUser').value;//使用人
+        var gbuser = document.getElementById('gBorrower').value;//经手人
+        var gallNuber = document.getElementById('gGoodsNumber').value;//库存数
+
+        if(gnumber > gallNuber){
+            layer.msg("借出数量不能大于库存量");
+            return;
+        }
+        borrowOrGive(false,gid, gnumber,guser,gbuser,"");
+    }
+    //访问后台借出或者领出
+    function borrowOrGive(isBorrow,gsid,gnumber,username,gusername,date) {
+        var url = "normal/addBorrow";
+        if(!isBorrow){
+            url = "normal/addGive";
+        }
+        $.ajax({
+            url : url,
+            type : 'post',
+            dataType : 'json',
+            data: {
+                gsid: gsid,
+                gnumber: gnumber,
+                username: username,
+                gusername:gusername,
+                date: date
+            },
+            success : function(ret) {
+                console.log(ret);
+                if (ret){
+                    layer.msg("添加成功");
+                    tableIns.reload({});
+                    layer.close(currentLayer);
+                } else {
+                    layer.msg("出错了，添加失败");
+                }
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+    //报废
+    function scrapGoods() {
+        var gid = document.getElementById('sgid').value;
+        var gnumber = document.getElementById('sNumber').value;//报废数量
+        var gallNuber = document.getElementById('sGoodsNumber').value;//库存数
+        if(gnumber > gallNuber){
+            layer.msg("报废数量不能大于库存量");
+            return;
+        }
+        $.ajax({
+            url : "normal/scrapGoods",
+            type : 'post',
+            dataType : 'json',
+            data: {
+                gsid: gid,
+                gnumber: gnumber,
+            },
+            success : function(ret) {
+                console.log(ret);
+                if (ret){
+                    layer.msg("报废成功");
+                    tableIns.reload({});
+                    layer.close(currentLayer);
+                } else {
+                    layer.msg("出错了，报废失败");
+                }
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+
+</script>
+
+</html>

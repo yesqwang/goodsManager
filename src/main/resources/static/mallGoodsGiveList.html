@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>库存表</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    .layerPanel{
+        padding: 20px;
+        text-align: center;
+    }
+</style>
+<body>
+    <div class="layui-row">
+        <!--<button class="layui-btn" onclick="">去借物品</button>
+        <button class="layui-btn layui-btn-warm">将选中项导出申请表</button>-->
+        <div class="layui-col-xs5 layui-col-sm5 layui-col-md5" style="padding-left: 20px;">
+            <div class="layui-inline">
+                <form class="layui-form">
+                    <select lay-filter="kinds">
+                        <option value="showAllHistory">显示全部历史</option>
+                        <option value="showBorrow">只显示借用历史</option>
+                        <option value="showGive">只显示领取历史</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6" style="text-align: right; padding-right: 20px;">
+            <div class="layui-inline">
+                <div class="layui-input-inline" style="width: 400px;">
+                    <input type="text" id="searchText" placeholder="根据借领人账号模糊查询" class="layui-input">
+                </div>
+                <div class="layui-input-inline" style="width: 100px;">
+                    <button class="layui-btn layui-btn-warm" onclick="search()">搜索</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</body>
+
+<!-- 弹出层：借出 -->
+<!--<div id="borrowPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称：</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="goodsname" name="goodsname" placeholder="物品名称" autocomplete="off" class="layui-input" disabled>
+                    <input type="hidden" id="gbid" name="gbid" value="0"/>
+                </div>
+                <div class="layui-form-mid">借出数量：</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="borrowNumber" name="borrowNumber" placeholder="借出数量" class="layui-input" disabled/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">使用人：</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bUser" name="bUser" placeholder="使用人姓名" autocomplete="off" class="layui-input" disabled>
+                </div>
+                <div class="layui-form-mid">经手人：</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bBorrower" name="bBorrower" placeholder="经手人姓名" class="layui-input" disabled/>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">借出日期：</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bDate" name="bDate" placeholder="应还日期" autocomplete="off" class="layui-input" disabled>
+                </div>
+                <div class="layui-form-mid">应还日期：</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="wrDate" name="wrDate" placeholder="应还日期" autocomplete="off" class="layui-input" disabled>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">归还经手人</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="returnUser" name="returnUser" placeholder="归还经手人姓名" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">归还数量：</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" id="returnNumber" name="returnNumber" placeholder="归还数量" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注：</label>
+            <div class="layui-input-inline" style="width: 500px;">
+                <input type="text" id="note" name="note" placeholder="备注" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <button class="layui-btn layui-btn-primary"  lay-submit lay-filter="sureReturn">确定归还</button>
+        </div>
+    </form>
+</div>-->
+<!-- 行工具栏 -->
+<!--<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="returnBorrow">归还</a>
+</script>-->
+<!--加载组件-->
+<script>
+    var currentLayer;
+    var tableIns;
+    var nowSearchText = '';
+    var nowKinds = 'showAllHistory';
+    layui.use(['table','form','layer'], function(){
+        var table = layui.table;
+        var layer = layui.layer;
+        var form = layui.form;
+
+        //初始化表格
+        tableIns = table.render({
+            elem: '#demo'
+            ,height: 'full-50'
+            ,url: 'gmanager/getAllGoodsBorrowList' //数据接口
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {title: '序号', width:80, sort: true, fixed:'left', type:'numbers'}
+                ,{field: 'gbid', title: '编号', width:80, sort: true, hide:true}
+                ,{field: 'goodsName', title: '物品名称', width:180}
+                ,{field: 'goodsKind', title: '类别', width:80}
+                ,{field: 'goodsBrand', title: '品牌', width:80}
+                ,{field: 'goodsModel', title: '型号', width: 177}
+                ,{field: 'goodsPram', title: '规格参数', width: 180}
+                ,{field: 'goodsUnit', title: '单位', width: 80}
+                ,{field: 'username', title: '借取人', width: 80, sort: true}
+                ,{field: 'borrowTime', title: '借出时间', width: 80, sort: true}
+                ,{field: 'busername', title: '借出经手人', width: 80, sort: true}
+                ,{field: 'willReturnDate', title: '应还时间', width: 80, sort: true}
+                ,{field: 'reNumber', title: '已还数量', width: 80, sort: true}
+                ,{field: 'reDate', title: '上次归还日期', width: 80, sort: true}
+                ,{field: 'reusername', title: '归还经手人', width: 80, sort: true}
+                ,{field: 'note', title: '备注', width: 80, sort: true}
+                ,{field: 'number', title: '借出数量', width: 135, sort: true, fixed:'right'}
+                ,{field: 'status', title: '借出状态', width: 100, sort: true, fixed:'right'}
+                /*,{title: '操作', width: 180, toolbar: '#itemBar', width:100,fixed: 'right'}*/
+            ]]
+            ,parseData: function(res){ //res 即为原始返回的数据
+                console.log(res);
+                return res;
+            }
+        });
+
+        form.on('select(kinds)', function(data){
+            console.log(data.value); //得到被选中的值
+            nowKinds = data.value;
+            tableIns.reload({
+                where:{
+                    search:nowSearchText,
+                    kind: nowKinds
+                }
+            })
+
+        });
+    });
+</script>
+<script>
+    function search() {
+        var text = document.getElementById('searchText').value;
+        nowSearchText = text;
+        tableIns.reload({
+            where:{
+                search:nowSearchText,
+                kind: nowKinds
+            }
+        })
+    }
+</script>
+
+</html>

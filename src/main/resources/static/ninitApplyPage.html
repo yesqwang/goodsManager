@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新建申请</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<body>
+    <div style="height: 47vh">
+        <div class="layui-row">
+            <div class="layui-col-xs3 layui-col-sm3 layui-col-md3">
+            <form class="layui-form">
+                <input type="radio" name="tb" lay-filter="tb" value="getGoodsApplyList" title="申请总表" checked/>
+                <input type="radio" name="tb" lay-filter="tb" value="getGoodsBuyList" title="采购总表"/>
+            </form>
+            </div>
+            <div class="layui-col-xs8 layui-col-sm8 layui-col-md8" style="padding-right: 10px; text-align: right;">
+                <div class="layui-inline">
+                    <div class="layui-input-inline" style="width: 400px;">
+                        <input type="text" id="searchText" placeholder="根据物品名称模糊查询" class="layui-input">
+                    </div>
+                    <div class="layui-input-inline" style="width: 100px;">
+                        <button class="layui-btn layui-btn-warm" onclick="search()">搜索</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <table id="demo" lay-filter="test"></table>
+    </div>
+    <hr class="layui-bg-black">
+    <div style="height: 45vh">
+        <div>
+            <button class="layui-btn layui-btn-normal layui-btn-xs" onclick="submitToMyApply()">提交保存</button>
+            <button class="layui-btn layui-btn-warm layui-btn-xs" onclick="showAddPanel()">手动添加</button>
+        </div>
+        <table id="demo1" lay-filter="test1"></table>
+    </div>
+</body>
+
+<!-- 弹出层：手动添加申请 -->
+<div id="addApplyPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsName" placeholder="物品名称" required lay-verify="required" class="layui-input">
+                </div>
+                <div class="layui-form-mid">类别</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsKind" placeholder="类别" required lay-verify="required" class="layui-input" list="kinds"/>
+                    <datalist id="kinds"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">品牌</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsBrand" list="brands" required lay-verify="required" placeholder="物品类别" class="layui-input">
+                    <datalist id="brands"></datalist>
+                </div>
+                <div class="layui-form-mid">型号</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsModel" placeholder="物品型号" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">规格参数</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="goodsPram" placeholder="规格参数" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <div class="layui-form-label">使用对象</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <div class="layui-input-block" style="margin-left: 0px;">
+                        <select name="whoUses" id="whoUses" lay-filter="whoUse" lay-verify="required"></select>
+                    </div>
+                </div>
+                <div class="layui-form-mid">单位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsUnit" list="units" required lay-verify="required" placeholder="物品单位" autocomplete="off" class="layui-input">
+                    <datalist id="units"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">估计单价</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" name="goodsPrice" required lay-verify="required" placeholder="估计单价" autocomplete="off" class="layui-input">
+                </div>
+                <label class="layui-form-mid">数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" name="goodsNumber" required lay-verify="required" placeholder="采购数量" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用途</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="whatToDo" placeholder="用途" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">采购网址</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="url" placeholder="URL" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <textarea name="note" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="toAddApply">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary" id="reset">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 上表行工具栏 -->
+<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-xs" lay-event="addIt">
+        <i class="layui-icon layui-icon-add-1"></i>
+    </a>
+</script>
+
+<!--下表行工具栏-->
+<script type="text/html" id="itemBar1">
+    <a class="layui-btn layui-btn-xs" lay-event="removeIt">
+        <i class="layui-icon layui-icon-delete"></i>
+    </a>
+</script>
+
+<!--ajax加载页面选项参数-->
+<script>
+    //获取物品类型
+    $.ajax({
+        url : "initPage/getAllGoodsKinds",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var kinds = document.getElementById('kinds');
+            kinds.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                kinds.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品品牌
+    $.ajax({
+        url : "initPage/getAllGoodsBrands",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var brands = document.getElementById('brands');
+            brands.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                brands.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品单位
+    $.ajax({
+        url : "initPage/getAllGoodsUnit",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var units = document.getElementById('units');
+            units.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                units.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品使用对象
+    $.ajax({
+        url : "initPage/getAllGoodsUser",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var whoUses = document.getElementById('whoUses');
+            whoUses.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                op.innerText = name;
+                whoUses.appendChild(op);
+            }
+            layui.use('form', function(){
+                layui.form.render('select');
+            });
+
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+</script>
+
+<!--加载组件-->
+<script>
+    var layerIns;
+    var table; //layui表格对象
+    var form; //layui表单对象
+    var layer; //layui弹出层对象
+    var listTableIns; //上表对象
+    var tempApplyListIns; //下表对象
+    layui.use(['table','form','layer'], function(){
+        table = layui.table;
+        form = layui.form;
+        layer = layui.layer;
+
+        //第一个实例，上表
+        listTableIns = table.render({
+            elem: '#demo'
+            ,height: 250
+            ,url: 'normal/getGoodsApplyList' //数据接口
+            ,page: true //开启分页
+            ,id: 'alist'
+            ,limit: 5
+            ,limits:[5,10,20,50,100,200,500]
+            ,cols: [[ //表头
+                // {type: 'checkbox', width:40, fixed: 'left'},
+                {type:'numbers', title: '序号', width:60, fixed: 'left'}
+                ,{field: 'goodsId',hide:true, title: 'ID', width:60}
+                ,{field: 'goodsName', title: '物品名称', width:180,fixed: 'left', sort: true}
+                ,{field: 'goodsKind', title: '类别', width:80, sort: true}
+                ,{field: 'goodsBrand', title: '品牌', width:80, sort: true}
+                ,{field: 'goodsModel', title: '型号', width: 177, sort: true}
+                ,{field: 'goodsPram', title: '规格参数', width: 180, sort: true}
+                ,{field: 'goodsUnit', title: '单位', width: 80, sort: true}
+                ,{field: 'goodsNumber', title: '数量', width: 80, sort: true}
+                ,{field: 'goodsPrice', title: '单价', width: 105, sort: true}
+                ,{field: 'whoUses', title: '使用对象', width:100, sort: true}
+                ,{field: 'whatToDo', title: '用途', width:120, sort: true}
+                ,{field: 'applyer', title: '申请人', width:100, sort: true}
+                ,{field: 'applyDate', title: '申请时间', width:120, sort: true}
+               ,{title: '操作', width: 135, toolbar: '#itemBar', width:60,fixed: 'right'}
+            ]]
+        });
+        //监听表格排序（上表）
+        table.on('sort(test)', function(obj){
+            console.log(obj.field);
+            console.log(obj.type);
+
+            table.reload('alist', {
+                initSort: obj
+                ,where: {
+                    field: obj.field
+                    ,order: obj.type
+                }
+            });
+        });
+        //监听单选框切换数据（上表）
+        form.on('radio(tb)', function(data){
+            console.log(data.value); //被点击的radio的value值
+            var mapping = data.value;
+            listTableIns.reload({
+                url:'normal/'+mapping,
+                page: 1
+            });
+        });
+
+        //我的申请列表，下表
+        tempApplyListIns = table.render({
+            elem: '#demo1'
+            ,height: 280
+            //,url: '#' //数据接口
+            ,page: true //开启分页
+            ,id: 'mylist'
+            ,cols: [[ //表头
+                // {type: 'checkbox', width:40, fixed: 'left'},
+                {type:'numbers', title: '序号', width:60, fixed: 'left'}
+                ,{field: 'goodsId', hide:true, title: 'ID', width:60, fixed: 'left', sort: true}
+                ,{field: 'goodsName', title: '物品名称', width:180,fixed: 'left', sort: true,edit:'text'}
+                ,{field: 'goodsKind', title: '类别', width:80, sort: true,edit:'text'}
+                ,{field: 'goodsBrand', title: '品牌', width:80, sort: true,edit:'text'}
+                ,{field: 'goodsModel', title: '型号', width: 177, sort: true,edit:'text'}
+                ,{field: 'goodsPram', title: '规格参数', width: 180, sort: true,edit:'text'}
+                ,{field: 'goodsUnit', title: '单位', width: 80, sort: true,edit:'text'}
+                ,{field: 'goodsNumber', title: '数量', width: 80, sort: true,edit:'text'}
+                ,{field: 'goodsPrice', title: '单价', width: 105, sort: true,edit:'text'}
+                ,{field: 'whoUses', title: '使用对象', width:100, sort: true,edit:'text'}
+                ,{field: 'whatToDo', title: '用途', width:120, sort: true,edit:'text'}
+                ,{field: 'applyer', title: '申请人', width:100, sort: true,edit:'text'}
+                ,{field: 'applyDate', title: '申请时间', width:120, sort: true,edit:'text'}
+                ,{title: '操作', width: 135, toolbar: '#itemBar1', width:60,fixed: 'right'}
+            ]]
+        });
+
+        //监听表格行工具栏（上表）
+        table.on('tool(test)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+            if(layEvent === 'addIt'){
+                var datas = table.cache.mylist;
+                if(datas == null){
+                    datas = [];
+                }
+                //console.log(datas);
+                datas.push(data);
+                tempApplyListIns.reload({data:datas});
+            }
+        });
+        //监听表格行工具（下表）
+        table.on('tool(test1)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+            if(layEvent === 'removeIt'){
+                obj.del();
+                //console.log(obj);
+                //console.log('sssss');
+                //console.log(table.cache.mylist);
+                //tempApplyListIns.chche
+            }
+            var datas = table.cache.mylist;
+            console.log(datas);
+            var new_datas = [];
+            for(var i in datas){
+                var item = datas[i];
+                if(item.length != 0){
+                    new_datas[new_datas.length] = item;
+                }
+            }
+            table.cache.mylist = new_datas;
+            tempApplyListIns.reload({data:new_datas});
+        });
+        //监听手动添加行（下表）
+        form.on('submit(toAddApply)', function(data){
+            //layer.msg(JSON.stringify(data.field));
+            var datas = table.cache.mylist;
+            if(datas == null){
+                datas = [];
+            }
+            datas.push(data.field);
+            tempApplyListIns.reload({data:datas});
+            layer.close(layerIns);
+            return false;
+        });
+        //监听表格修改（下表）
+        table.on('edit(test1)', function(obj){
+            /*console.log(obj.value); //得到修改后的值
+            console.log(obj.field); //当前编辑的字段名
+            console.log(obj.data); //所在行的所有相关数据
+            */
+
+        });
+
+    });
+
+</script>
+<!--功能-->
+<script>
+    //打开手动添加申请弹出层
+    function showAddPanel() {
+        document.getElementById('reset').click();
+        layerIns = layer.open({
+            type: 1,
+            title: '新增申请',
+            area: ['800px', '620px'],
+            content: layui.$('#addApplyPanel')
+        });
+    }
+
+    //提交表格数据到个人申请表
+    function submitToMyApply() {
+        var datas = table.cache.mylist;
+        console.log(datas);
+        $.ajax({
+            url : "normal/addPersonalApplys",
+            type : 'post',
+            dataType : 'json',
+            data: JSON.stringify(datas),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            success : function(ret) {
+                console.log(ret);
+                if (ret){
+                    layer.msg("添加成功");
+                    tempApplyListIns.reload({data:[]});
+                }
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+
+    //搜索
+    function search() {
+        var text = document.getElementById('searchText').value;
+        listTableIns.reload({
+            where:{search: text}
+        })
+    }
+</script>
+</html>

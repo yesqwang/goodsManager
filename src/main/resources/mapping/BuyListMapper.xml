@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="goods.mapper.BuyListMapper">
+  <resultMap id="BaseResultMap" type="goods.pojo.BuyList">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="pid" jdbcType="TIMESTAMP" property="pid" />
+    <result column="goods_name" jdbcType="VARCHAR" property="goodsName" />
+    <result column="goods_kind" jdbcType="INTEGER" property="goodsKind" />
+    <result column="goods_brand" jdbcType="INTEGER" property="goodsBrand" />
+    <result column="goods_model" jdbcType="VARCHAR" property="goodsModel" />
+    <result column="goods_parm" jdbcType="VARCHAR" property="goodsParm" />
+    <result column="goods_price" jdbcType="DOUBLE" property="goodsPrice" />
+    <result column="goods_unit" jdbcType="INTEGER" property="goodsUnit" />
+    <result column="goods_number" jdbcType="INTEGER" property="goodsNumber" />
+    <result column="complete_status" jdbcType="VARCHAR" property="completeStatus" />
+    <result column="will_complete_date" jdbcType="DATE" property="willCompleteDate" />
+    <result column="complete_date" jdbcType="DATE" property="completeDate" />
+    <result column="real_buy_number" jdbcType="INTEGER" property="realBuyNumber" />
+    <result column="note" jdbcType="VARCHAR" property="note" />
+    <result column="buy_company" jdbcType="INTEGER" property="buyCompany" />
+    <result column="user" jdbcType="VARCHAR" property="user" />
+    <result column="phone" jdbcType="VARCHAR" property="phone" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, pid, goods_name, goods_kind, goods_brand, goods_model, goods_parm, goods_price, 
+    goods_unit, goods_number, complete_status, will_complete_date, complete_date, real_buy_number, 
+    note, buy_company, user, phone
+  </sql>
+  <select id="selectByExample" parameterType="goods.pojo.BuyListExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    'true' as QUERYID,
+    <include refid="Base_Column_List" />
+    from buy_list
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from buy_list
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+
+
+
+  <resultMap id="pidsMap" type="goods.vo.PageBuyLists">
+    <!--<id column="id" jdbcType="INTEGER" property="id" />-->
+    <result column="pid" jdbcType="VARCHAR" property="pid" />
+    <result column="cname" jdbcType="VARCHAR" property="cname" />
+    <result column="uname" jdbcType="VARCHAR" property="uname" />
+    <result column="phone" jdbcType="VARCHAR" property="phone" />
+  </resultMap>
+  <select id="getPids" parameterType="map" resultMap="pidsMap">
+    select pid, company_name as cname, user_name as uname, phone
+    from buy_list, company
+    where
+    buy_list.buy_company = company.id
+    and buy_list.pid like #{search}
+    group by pid
+    order by ${order}
+    limit #{limit,jdbcType=INTEGER}, #{offset,jdbcType=INTEGER}
+  </select>
+  <select id="countPids"  resultType="java.lang.Integer">
+    select count(distinct pid) from buy_list, company
+  </select>
+
+  <!--  统计数量（首页） -->
+  <select id="sumAllStore"  resultType="java.lang.Integer">
+      select sum(goods_number) from goods_store
+  </select>
+  <select id="countAllKinds"  resultType="java.lang.Integer">
+    select count(*) from goods_kind
+  </select>
+  <select id="countAllStore"  resultType="java.lang.Integer">
+      select count(*) from goods_store
+  </select>
+  <select id="countAllBorrow"  resultType="java.lang.Integer">
+      select count(*) from goods_store where goods_borrow_number!=0
+  </select>
+  <select id="sumAllBorrow"  resultType="java.lang.Integer">
+    select sum(goods_borrow_number) from goods_store
+  </select>
+
+  <select id="countAllApply"  resultType="java.lang.Integer">
+    select count(*) from goods_apply where apply_status='正在申请'
+  </select>
+  <select id="countAllNoBuying"  resultType="java.lang.Integer">
+    select count(*) from buy_list where complete_status='未采购'
+  </select>
+  <select id="countAllBuying"  resultType="java.lang.Integer">
+    select count(*) from buy_list where complete_status='正在采购'
+  </select>
+  <select id="countAllNoCompleteBuy"  resultType="java.lang.Integer">
+    select count(*) from buy_list where complete_status='部分完成'
+  </select>
+  <select id="countBuyList"  resultType="java.lang.Integer">
+    select count(distinct pid) from buy_list
+  </select>
+
+  <select id="countNormalUser"  resultType="java.lang.Integer">
+    select count(*) from user_identity where iid=1
+  </select>
+  <select id="countManagerUser"  resultType="java.lang.Integer">
+    select count(*) from user_identity where iid=2
+  </select>
+  <select id="countAllCompany"  resultType="java.lang.Integer">
+    select count(*) from company
+  </select>
+  <select id="countBrand"  resultType="java.lang.Integer">
+    select count(*) from goods_brand
+  </select>
+  <select id="countGoodsUser"  resultType="java.lang.Integer">
+    select count(*) from goods_user
+  </select>
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from buy_list
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="goods.pojo.BuyListExample">
+    delete from buy_list
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="goods.pojo.BuyList">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into buy_list (pid, goods_name, goods_kind, 
+      goods_brand, goods_model, goods_parm, 
+      goods_price, goods_unit, goods_number, 
+      complete_status, will_complete_date, complete_date, 
+      real_buy_number, note, buy_company, 
+      user, phone)
+    values (#{pid,jdbcType=TIMESTAMP}, #{goodsName,jdbcType=VARCHAR}, #{goodsKind,jdbcType=INTEGER}, 
+      #{goodsBrand,jdbcType=INTEGER}, #{goodsModel,jdbcType=VARCHAR}, #{goodsParm,jdbcType=VARCHAR}, 
+      #{goodsPrice,jdbcType=DOUBLE}, #{goodsUnit,jdbcType=INTEGER}, #{goodsNumber,jdbcType=INTEGER}, 
+      #{completeStatus,jdbcType=VARCHAR}, #{willCompleteDate,jdbcType=DATE}, #{completeDate,jdbcType=DATE}, 
+      #{realBuyNumber,jdbcType=INTEGER}, #{note,jdbcType=VARCHAR}, #{buyCompany,jdbcType=INTEGER}, 
+      #{user,jdbcType=VARCHAR}, #{phone,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="goods.pojo.BuyList">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into buy_list
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="pid != null">
+        pid,
+      </if>
+      <if test="goodsName != null">
+        goods_name,
+      </if>
+      <if test="goodsKind != null">
+        goods_kind,
+      </if>
+      <if test="goodsBrand != null">
+        goods_brand,
+      </if>
+      <if test="goodsModel != null">
+        goods_model,
+      </if>
+      <if test="goodsParm != null">
+        goods_parm,
+      </if>
+      <if test="goodsPrice != null">
+        goods_price,
+      </if>
+      <if test="goodsUnit != null">
+        goods_unit,
+      </if>
+      <if test="goodsNumber != null">
+        goods_number,
+      </if>
+      <if test="completeStatus != null">
+        complete_status,
+      </if>
+      <if test="willCompleteDate != null">
+        will_complete_date,
+      </if>
+      <if test="completeDate != null">
+        complete_date,
+      </if>
+      <if test="realBuyNumber != null">
+        real_buy_number,
+      </if>
+      <if test="note != null">
+        note,
+      </if>
+      <if test="buyCompany != null">
+        buy_company,
+      </if>
+      <if test="user != null">
+        user,
+      </if>
+      <if test="phone != null">
+        phone,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="pid != null">
+        #{pid,jdbcType=TIMESTAMP},
+      </if>
+      <if test="goodsName != null">
+        #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsKind != null">
+        #{goodsKind,jdbcType=INTEGER},
+      </if>
+      <if test="goodsBrand != null">
+        #{goodsBrand,jdbcType=INTEGER},
+      </if>
+      <if test="goodsModel != null">
+        #{goodsModel,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsParm != null">
+        #{goodsParm,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsPrice != null">
+        #{goodsPrice,jdbcType=DOUBLE},
+      </if>
+      <if test="goodsUnit != null">
+        #{goodsUnit,jdbcType=INTEGER},
+      </if>
+      <if test="goodsNumber != null">
+        #{goodsNumber,jdbcType=INTEGER},
+      </if>
+      <if test="completeStatus != null">
+        #{completeStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="willCompleteDate != null">
+        #{willCompleteDate,jdbcType=DATE},
+      </if>
+      <if test="completeDate != null">
+        #{completeDate,jdbcType=DATE},
+      </if>
+      <if test="realBuyNumber != null">
+        #{realBuyNumber,jdbcType=INTEGER},
+      </if>
+      <if test="note != null">
+        #{note,jdbcType=VARCHAR},
+      </if>
+      <if test="buyCompany != null">
+        #{buyCompany,jdbcType=INTEGER},
+      </if>
+      <if test="user != null">
+        #{user,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null">
+        #{phone,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="goods.pojo.BuyListExample" resultType="java.lang.Long">
+    select count(*) from buy_list
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update buy_list
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.pid != null">
+        pid = #{record.pid,jdbcType=TIMESTAMP},
+      </if>
+      <if test="record.goodsName != null">
+        goods_name = #{record.goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.goodsKind != null">
+        goods_kind = #{record.goodsKind,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsBrand != null">
+        goods_brand = #{record.goodsBrand,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsModel != null">
+        goods_model = #{record.goodsModel,jdbcType=VARCHAR},
+      </if>
+      <if test="record.goodsParm != null">
+        goods_parm = #{record.goodsParm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.goodsPrice != null">
+        goods_price = #{record.goodsPrice,jdbcType=DOUBLE},
+      </if>
+      <if test="record.goodsUnit != null">
+        goods_unit = #{record.goodsUnit,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsNumber != null">
+        goods_number = #{record.goodsNumber,jdbcType=INTEGER},
+      </if>
+      <if test="record.completeStatus != null">
+        complete_status = #{record.completeStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="record.willCompleteDate != null">
+        will_complete_date = #{record.willCompleteDate,jdbcType=DATE},
+      </if>
+      <if test="record.completeDate != null">
+        complete_date = #{record.completeDate,jdbcType=DATE},
+      </if>
+      <if test="record.realBuyNumber != null">
+        real_buy_number = #{record.realBuyNumber,jdbcType=INTEGER},
+      </if>
+      <if test="record.note != null">
+        note = #{record.note,jdbcType=VARCHAR},
+      </if>
+      <if test="record.buyCompany != null">
+        buy_company = #{record.buyCompany,jdbcType=INTEGER},
+      </if>
+      <if test="record.user != null">
+        user = #{record.user,jdbcType=VARCHAR},
+      </if>
+      <if test="record.phone != null">
+        phone = #{record.phone,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update buy_list
+    set id = #{record.id,jdbcType=INTEGER},
+      pid = #{record.pid,jdbcType=TIMESTAMP},
+      goods_name = #{record.goodsName,jdbcType=VARCHAR},
+      goods_kind = #{record.goodsKind,jdbcType=INTEGER},
+      goods_brand = #{record.goodsBrand,jdbcType=INTEGER},
+      goods_model = #{record.goodsModel,jdbcType=VARCHAR},
+      goods_parm = #{record.goodsParm,jdbcType=VARCHAR},
+      goods_price = #{record.goodsPrice,jdbcType=DOUBLE},
+      goods_unit = #{record.goodsUnit,jdbcType=INTEGER},
+      goods_number = #{record.goodsNumber,jdbcType=INTEGER},
+      complete_status = #{record.completeStatus,jdbcType=VARCHAR},
+      will_complete_date = #{record.willCompleteDate,jdbcType=DATE},
+      complete_date = #{record.completeDate,jdbcType=DATE},
+      real_buy_number = #{record.realBuyNumber,jdbcType=INTEGER},
+      note = #{record.note,jdbcType=VARCHAR},
+      buy_company = #{record.buyCompany,jdbcType=INTEGER},
+      user = #{record.user,jdbcType=VARCHAR},
+      phone = #{record.phone,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="goods.pojo.BuyList">
+    update buy_list
+    <set>
+      <if test="pid != null">
+        pid = #{pid,jdbcType=TIMESTAMP},
+      </if>
+      <if test="goodsName != null">
+        goods_name = #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsKind != null">
+        goods_kind = #{goodsKind,jdbcType=INTEGER},
+      </if>
+      <if test="goodsBrand != null">
+        goods_brand = #{goodsBrand,jdbcType=INTEGER},
+      </if>
+      <if test="goodsModel != null">
+        goods_model = #{goodsModel,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsParm != null">
+        goods_parm = #{goodsParm,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsPrice != null">
+        goods_price = #{goodsPrice,jdbcType=DOUBLE},
+      </if>
+      <if test="goodsUnit != null">
+        goods_unit = #{goodsUnit,jdbcType=INTEGER},
+      </if>
+      <if test="goodsNumber != null">
+        goods_number = #{goodsNumber,jdbcType=INTEGER},
+      </if>
+      <if test="completeStatus != null">
+        complete_status = #{completeStatus,jdbcType=VARCHAR},
+      </if>
+      <if test="willCompleteDate != null">
+        will_complete_date = #{willCompleteDate,jdbcType=DATE},
+      </if>
+      <if test="completeDate != null">
+        complete_date = #{completeDate,jdbcType=DATE},
+      </if>
+      <if test="realBuyNumber != null">
+        real_buy_number = #{realBuyNumber,jdbcType=INTEGER},
+      </if>
+      <if test="note != null">
+        note = #{note,jdbcType=VARCHAR},
+      </if>
+      <if test="buyCompany != null">
+        buy_company = #{buyCompany,jdbcType=INTEGER},
+      </if>
+      <if test="user != null">
+        user = #{user,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null">
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="goods.pojo.BuyList">
+    update buy_list
+    set pid = #{pid,jdbcType=TIMESTAMP},
+      goods_name = #{goodsName,jdbcType=VARCHAR},
+      goods_kind = #{goodsKind,jdbcType=INTEGER},
+      goods_brand = #{goodsBrand,jdbcType=INTEGER},
+      goods_model = #{goodsModel,jdbcType=VARCHAR},
+      goods_parm = #{goodsParm,jdbcType=VARCHAR},
+      goods_price = #{goodsPrice,jdbcType=DOUBLE},
+      goods_unit = #{goodsUnit,jdbcType=INTEGER},
+      goods_number = #{goodsNumber,jdbcType=INTEGER},
+      complete_status = #{completeStatus,jdbcType=VARCHAR},
+      will_complete_date = #{willCompleteDate,jdbcType=DATE},
+      complete_date = #{completeDate,jdbcType=DATE},
+      real_buy_number = #{realBuyNumber,jdbcType=INTEGER},
+      note = #{note,jdbcType=VARCHAR},
+      buy_company = #{buyCompany,jdbcType=INTEGER},
+      user = #{user,jdbcType=VARCHAR},
+      phone = #{phone,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

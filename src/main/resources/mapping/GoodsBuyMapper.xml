@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="goods.mapper.GoodsBuyMapper">
+  <resultMap id="BaseResultMap" type="goods.pojo.GoodsBuy">
+    <id column="gbid" jdbcType="INTEGER" property="gbid" />
+    <result column="goods_name" jdbcType="VARCHAR" property="goodsName" />
+    <result column="goods_kind" jdbcType="INTEGER" property="goodsKind" />
+    <result column="goods_brand" jdbcType="INTEGER" property="goodsBrand" />
+    <result column="goods_model" jdbcType="VARCHAR" property="goodsModel" />
+    <result column="goods_parm" jdbcType="VARCHAR" property="goodsParm" />
+    <result column="goods_unit" jdbcType="INTEGER" property="goodsUnit" />
+    <result column="goods_number" jdbcType="INTEGER" property="goodsNumber" />
+    <result column="goods_price" jdbcType="DOUBLE" property="goodsPrice" />
+    <result column="who_to_use" jdbcType="INTEGER" property="whoToUse" />
+    <result column="what_to_do" jdbcType="VARCHAR" property="whatToDo" />
+    <result column="url" jdbcType="VARCHAR" property="url" />
+    <result column="note" jdbcType="VARCHAR" property="note" />
+    <result column="real_buy_number" jdbcType="INTEGER" property="realBuyNumber" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    gbid, goods_name, goods_kind, goods_brand, goods_model, goods_parm, goods_unit, goods_number, 
+    goods_price, who_to_use, what_to_do, url, note, real_buy_number, status
+  </sql>
+  <select id="selectByExample" parameterType="goods.pojo.GoodsBuyExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    'true' as QUERYID,
+    <include refid="Base_Column_List" />
+    from goods_buy
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+    <if test="(offset != null and limit != null) or (offset != 0 and limit != 0)">
+      limit ${offset},${limit}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from goods_buy
+    where gbid = #{gbid,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from goods_buy
+    where gbid = #{gbid,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="goods.pojo.GoodsBuyExample">
+    delete from goods_buy
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="goods.pojo.GoodsBuy">
+    <selectKey keyProperty="gbid" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into goods_buy (goods_name, goods_kind, goods_brand, 
+      goods_model, goods_parm, goods_unit, 
+      goods_number, goods_price, who_to_use, 
+      what_to_do, url, note, 
+      real_buy_number, status)
+    values (#{goodsName,jdbcType=VARCHAR}, #{goodsKind,jdbcType=INTEGER}, #{goodsBrand,jdbcType=INTEGER}, 
+      #{goodsModel,jdbcType=VARCHAR}, #{goodsParm,jdbcType=VARCHAR}, #{goodsUnit,jdbcType=INTEGER}, 
+      #{goodsNumber,jdbcType=INTEGER}, #{goodsPrice,jdbcType=DOUBLE}, #{whoToUse,jdbcType=INTEGER}, 
+      #{whatToDo,jdbcType=VARCHAR}, #{url,jdbcType=VARCHAR}, #{note,jdbcType=VARCHAR}, 
+      #{realBuyNumber,jdbcType=INTEGER}, #{status,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="goods.pojo.GoodsBuy">
+    <selectKey keyProperty="gbid" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into goods_buy
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="goodsName != null">
+        goods_name,
+      </if>
+      <if test="goodsKind != null">
+        goods_kind,
+      </if>
+      <if test="goodsBrand != null">
+        goods_brand,
+      </if>
+      <if test="goodsModel != null">
+        goods_model,
+      </if>
+      <if test="goodsParm != null">
+        goods_parm,
+      </if>
+      <if test="goodsUnit != null">
+        goods_unit,
+      </if>
+      <if test="goodsNumber != null">
+        goods_number,
+      </if>
+      <if test="goodsPrice != null">
+        goods_price,
+      </if>
+      <if test="whoToUse != null">
+        who_to_use,
+      </if>
+      <if test="whatToDo != null">
+        what_to_do,
+      </if>
+      <if test="url != null">
+        url,
+      </if>
+      <if test="note != null">
+        note,
+      </if>
+      <if test="realBuyNumber != null">
+        real_buy_number,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="goodsName != null">
+        #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsKind != null">
+        #{goodsKind,jdbcType=INTEGER},
+      </if>
+      <if test="goodsBrand != null">
+        #{goodsBrand,jdbcType=INTEGER},
+      </if>
+      <if test="goodsModel != null">
+        #{goodsModel,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsParm != null">
+        #{goodsParm,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsUnit != null">
+        #{goodsUnit,jdbcType=INTEGER},
+      </if>
+      <if test="goodsNumber != null">
+        #{goodsNumber,jdbcType=INTEGER},
+      </if>
+      <if test="goodsPrice != null">
+        #{goodsPrice,jdbcType=DOUBLE},
+      </if>
+      <if test="whoToUse != null">
+        #{whoToUse,jdbcType=INTEGER},
+      </if>
+      <if test="whatToDo != null">
+        #{whatToDo,jdbcType=VARCHAR},
+      </if>
+      <if test="url != null">
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="note != null">
+        #{note,jdbcType=VARCHAR},
+      </if>
+      <if test="realBuyNumber != null">
+        #{realBuyNumber,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="goods.pojo.GoodsBuyExample" resultType="java.lang.Long">
+    select count(*) from goods_buy
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update goods_buy
+    <set>
+      <if test="record.gbid != null">
+        gbid = #{record.gbid,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsName != null">
+        goods_name = #{record.goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="record.goodsKind != null">
+        goods_kind = #{record.goodsKind,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsBrand != null">
+        goods_brand = #{record.goodsBrand,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsModel != null">
+        goods_model = #{record.goodsModel,jdbcType=VARCHAR},
+      </if>
+      <if test="record.goodsParm != null">
+        goods_parm = #{record.goodsParm,jdbcType=VARCHAR},
+      </if>
+      <if test="record.goodsUnit != null">
+        goods_unit = #{record.goodsUnit,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsNumber != null">
+        goods_number = #{record.goodsNumber,jdbcType=INTEGER},
+      </if>
+      <if test="record.goodsPrice != null">
+        goods_price = #{record.goodsPrice,jdbcType=DOUBLE},
+      </if>
+      <if test="record.whoToUse != null">
+        who_to_use = #{record.whoToUse,jdbcType=INTEGER},
+      </if>
+      <if test="record.whatToDo != null">
+        what_to_do = #{record.whatToDo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.url != null">
+        url = #{record.url,jdbcType=VARCHAR},
+      </if>
+      <if test="record.note != null">
+        note = #{record.note,jdbcType=VARCHAR},
+      </if>
+      <if test="record.realBuyNumber != null">
+        real_buy_number = #{record.realBuyNumber,jdbcType=INTEGER},
+      </if>
+      <if test="record.status != null">
+        status = #{record.status,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update goods_buy
+    set gbid = #{record.gbid,jdbcType=INTEGER},
+      goods_name = #{record.goodsName,jdbcType=VARCHAR},
+      goods_kind = #{record.goodsKind,jdbcType=INTEGER},
+      goods_brand = #{record.goodsBrand,jdbcType=INTEGER},
+      goods_model = #{record.goodsModel,jdbcType=VARCHAR},
+      goods_parm = #{record.goodsParm,jdbcType=VARCHAR},
+      goods_unit = #{record.goodsUnit,jdbcType=INTEGER},
+      goods_number = #{record.goodsNumber,jdbcType=INTEGER},
+      goods_price = #{record.goodsPrice,jdbcType=DOUBLE},
+      who_to_use = #{record.whoToUse,jdbcType=INTEGER},
+      what_to_do = #{record.whatToDo,jdbcType=VARCHAR},
+      url = #{record.url,jdbcType=VARCHAR},
+      note = #{record.note,jdbcType=VARCHAR},
+      real_buy_number = #{record.realBuyNumber,jdbcType=INTEGER},
+      status = #{record.status,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="goods.pojo.GoodsBuy">
+    update goods_buy
+    <set>
+      <if test="goodsName != null">
+        goods_name = #{goodsName,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsKind != null">
+        goods_kind = #{goodsKind,jdbcType=INTEGER},
+      </if>
+      <if test="goodsBrand != null">
+        goods_brand = #{goodsBrand,jdbcType=INTEGER},
+      </if>
+      <if test="goodsModel != null">
+        goods_model = #{goodsModel,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsParm != null">
+        goods_parm = #{goodsParm,jdbcType=VARCHAR},
+      </if>
+      <if test="goodsUnit != null">
+        goods_unit = #{goodsUnit,jdbcType=INTEGER},
+      </if>
+      <if test="goodsNumber != null">
+        goods_number = #{goodsNumber,jdbcType=INTEGER},
+      </if>
+      <if test="goodsPrice != null">
+        goods_price = #{goodsPrice,jdbcType=DOUBLE},
+      </if>
+      <if test="whoToUse != null">
+        who_to_use = #{whoToUse,jdbcType=INTEGER},
+      </if>
+      <if test="whatToDo != null">
+        what_to_do = #{whatToDo,jdbcType=VARCHAR},
+      </if>
+      <if test="url != null">
+        url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="note != null">
+        note = #{note,jdbcType=VARCHAR},
+      </if>
+      <if test="realBuyNumber != null">
+        real_buy_number = #{realBuyNumber,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where gbid = #{gbid,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="goods.pojo.GoodsBuy">
+    update goods_buy
+    set goods_name = #{goodsName,jdbcType=VARCHAR},
+      goods_kind = #{goodsKind,jdbcType=INTEGER},
+      goods_brand = #{goodsBrand,jdbcType=INTEGER},
+      goods_model = #{goodsModel,jdbcType=VARCHAR},
+      goods_parm = #{goodsParm,jdbcType=VARCHAR},
+      goods_unit = #{goodsUnit,jdbcType=INTEGER},
+      goods_number = #{goodsNumber,jdbcType=INTEGER},
+      goods_price = #{goodsPrice,jdbcType=DOUBLE},
+      who_to_use = #{whoToUse,jdbcType=INTEGER},
+      what_to_do = #{whatToDo,jdbcType=VARCHAR},
+      url = #{url,jdbcType=VARCHAR},
+      note = #{note,jdbcType=VARCHAR},
+      real_buy_number = #{realBuyNumber,jdbcType=INTEGER},
+      status = #{status,jdbcType=VARCHAR}
+    where gbid = #{gbid,jdbcType=INTEGER}
+  </update>
+</mapper>

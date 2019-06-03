@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>主页</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+    <script src="js/echarts.min.js"></script>
+</head>
+<style>
+    .box{
+        border: 1px solid lightgray;
+        border-radius: 5px;
+        padding: 20px;
+    }
+</style>
+<body>
+<div >
+    <div class="layui-row">
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6 box">
+            <div style="width: 45vw;height:40vh;text-align: center; font-size: large; line-height: 38px;">
+                <div style="color: blue; font-size: x-large;">库存概况</div>
+                <table class="layui-table">
+                    <tbody>
+                        <tr><td>库存总数（件）</td><td><span id="allGoodsNum">0</span></td></tr>
+                        <tr><td>物品类型种数（种）</td><td><span id="allKindNum">0</span></td></tr>
+                        <tr><td>物品种数（种）</td><td><span id="allGoodsCount">0</span></td></tr>
+                        <tr><td>正在采购（种）</td><td><span id="allBuyingCount">0</span></td></tr>
+                        <!--<tr><td>正在采购（件）</td><td><span id="allBuyingNum">0</span></td></tr>-->
+                        <tr><td>普通用户总数（人）</td><td><span id="allUserNum">0</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6 box">
+            <!--总数/借出数-->
+            <div id="main1" style="width: 45vw;height:40vh;"></div>
+        </div>
+    </div>
+    <div class="layui-row">
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6 box">
+            <!-- 采购数量/申请数量 -->
+            <div id="main2" style="width: 45vw;height:40vh;"></div>
+        </div>
+        <div class="layui-col-xs6 layui-col-sm6 layui-col-md6 box">
+            <!-- / -->
+            <div id="main3" style="width: 45vw;height:40vh;"></div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    //柱状图
+    function getGraph(datas) {
+        var xdata = [];
+        var sdata = [];
+
+        for(var i in datas){
+            var item = datas[i];
+            xdata[xdata.length] = item.name;
+            sdata[sdata.length] = item.value;
+        }
+
+        var myChart = echarts.init(document.getElementById('main1'));
+        var option = {
+            title: { text: '库存一览表'},
+            tooltip: {},
+            legend: {  data:['物品数量'],x:'right' },
+            xAxis: { data: xdata },
+            yAxis: {},
+            series: [{
+                name: '物品数量',
+                type: 'bar',
+                data: sdata
+            }]
+        };
+        myChart.setOption(option);
+    }
+    //饼状图
+    function getPieGraph(datas) {
+        var xdata = [];
+        for(var i in datas){
+            var item = datas[i];
+            xdata[xdata.length] = item.name;
+        }
+        var myChart = echarts.init(document.getElementById('main2'));
+        option = {
+            title : {
+                text: '采购一览表',
+                subtext: '',
+                x:'center'
+            },
+            tooltip : {
+                trigger: 'item',
+                formatter: "{a} <br/>{b} : {c} ({d}%)"
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: xdata
+            },
+            series : [
+                {
+                    name: '物品种类数',
+                    type: 'pie',
+                    radius : '55%',
+                    center: ['50%', '60%'],
+                    data:datas/*[
+                        {value:335, name:'直接访问'},
+                        {value:310, name:'邮件营销'},
+                        {value:234, name:'联盟广告'},
+                        {value:135, name:'视频广告'},
+                        {value:1548, name:'搜索引擎'}
+                    ]*/,
+                    itemStyle: {
+                        emphasis: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }
+            ]
+        };
+        myChart.setOption(option);
+    }
+    //雷达图
+    function getRadarGraph(datas){
+        var xdata = [];
+        var sdata = [];
+        for(var i in datas){
+            var item = datas[i];
+            var obj = {};
+            obj.name = item.name;
+            xdata[xdata.length] = obj;
+            sdata[sdata.length] = item.value;
+        }
+
+        var myChart = echarts.init(document.getElementById('main3'));
+        option = {
+            title: {
+                text: '其它数据统计'
+            },
+            tooltip: {},
+            legend: {
+                data: ['数量'],
+                x:'right'
+            },
+            radar: {
+                // shape: 'circle',
+                name: {
+                    textStyle: {
+                        color: '#fff',
+                        backgroundColor: '#999',
+                        borderRadius: 3,
+                        padding: [3, 5]
+                    }
+                },
+                indicator: xdata
+            },
+            series: [{
+                name: '',
+                type: 'radar',
+                data : [
+                    {
+                        value : sdata,
+                        name : '数量'
+                    }
+                ]
+            }]
+        };
+        myChart.setOption(option);
+    }
+
+    //获取数据，初始化图表
+    $.ajax({
+        url : "initPage/getGraph",
+        type : 'post',
+        dataType : 'json',
+        data: {},
+        success : function(ret) {
+            //console.log(ret);
+            if (ret != null){
+                var barDatas = [ret[0],ret[1],ret[2],ret[3],ret[4]];
+                var pieDatas = [ret[5],ret[6],ret[7],ret[8],ret[9]];
+                var radarDatas = [ret[10],ret[11],ret[12],ret[13],ret[14]];
+
+                getGraph(barDatas);
+                getPieGraph(pieDatas);
+                getRadarGraph(radarDatas);
+                //console.log(radarDatas);
+                document.getElementById('allGoodsNum').innerText = ret[0].value;
+                document.getElementById('allKindNum').innerText = ret[2].value;
+                document.getElementById('allGoodsCount').innerText = ret[1].value;
+                document.getElementById('allBuyingCount').innerText = ret[7].value;
+                document.getElementById('allUserNum').innerText = ret[10].value;
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+
+
+
+</script>
+</html>

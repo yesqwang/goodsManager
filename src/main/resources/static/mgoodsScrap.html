@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>报废表</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    .layerPanel{
+        padding: 20px;
+        text-align: center;
+    }
+    .disShow{
+        display: none;
+    }
+</style>
+<body>
+<div style="height: 47vh">
+    <div class="layui-row" style="padding-right: 20px; text-align: right;">
+        <div class="layui-inline">
+            <div class="layui-input-inline" style="width: 400px;">
+                <input type="text" id="searchText" placeholder="根据物品名称模糊查询" class="layui-input">
+            </div>
+            <div class="layui-input-inline" style="width: 100px;">
+                <button class="layui-btn layui-btn-warm" onclick="search()">搜索</button>
+            </div>
+        </div>
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</div>
+<hr class="layui-bg-black">
+<div style="height: 45vh">
+    <div>
+        <button class="layui-btn layui-btn-normal layui-btn-sm" onclick="showPanel()">提交报废</button>
+    </div>
+    <table id="demo1" lay-filter="test1"></table>
+</div>
+</body>
+
+<!-- 弹出层：借出 -->
+<div id="borrowPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品种类：</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bgoodes" name="bgoodes" placeholder="物品种类" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">物品总数：</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="ballNumber" name="ballNumber" placeholder="物品总数" class="layui-input" />
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">使用人：</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bUser" name="bUser" placeholder="使用人姓名" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">经手人：</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" id="bBorrower" name="bBorrower" placeholder="经手人姓名" class="layui-input" />
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">借/领：</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="radio" name="isBortow" value=true  lay-filter="isb" title="借物品" checked>
+                    <input type="radio" name="isBortow" value=false lay-filter="isb" title="领物品">
+                </div>
+                <span id="sd" style="">
+                    <div class="layui-form-mid">应还日期：</div>
+                    <div class="layui-input-inline" style="width: 200px;">
+                        <input type="text" id="wrDate" name="wrDate" placeholder="应还日期" autocomplete="off" class="layui-input">
+                    </div>
+                </span>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">备注：</label>
+            <div class="layui-input-inline" style="width: 500px;">
+                <input type="text" id="note" name="note" placeholder="备注" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div style="text-align: center;">
+            <button class="layui-btn layui-btn-primary"  lay-submit lay-filter="sureBorrow">确定借出</button>
+        </div>
+    </form>
+
+</div>
+
+<!-- 上表行工具栏 -->
+<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-xs" lay-event="addIt">
+        <i class="layui-icon layui-icon-add-1"></i>
+    </a>
+</script>
+<!--下表行工具栏-->
+<script type="text/html" id="itemBar1">
+    <a class="layui-btn layui-btn-xs" lay-event="removeIt">
+        <i class="layui-icon layui-icon-delete"></i>
+    </a>
+</script>
+<!--加载组件-->
+<script>
+    var tableIns ;
+    var layer;
+    var table;
+    var currentLayer;
+    layui.use(['table','form','layer','laydate'], function(){
+        table = layui.table;
+        layer = layui.layer;
+        var laydate = layui.laydate;
+        var form = layui.form;
+
+        //初始化表格
+        tableIns = table.render({
+            elem: '#demo'
+            ,height: 250
+            ,url: 'normal/getGoodsSotreList' //数据接口
+            ,page: true //开启分页
+            ,id : 'alist'
+            ,cols: [[ //表头
+                {type: 'numbers', title: '序号', width:'5%', fixed: 'left'}
+                ,{field: 'goodsId', hide:true, title: 'id'}
+                ,{field: 'goodsName', title: '物品名称', width:'10%'}
+                ,{field: 'goodsKind', title: '类别', width:'10%', sort: true}
+                ,{field: 'goodsBrand', title: '品牌', width:'10%', sort: true}
+                ,{field: 'goodsModel', title: '型号', width: '20%', sort: true}
+                ,{field: 'goodsPram', title: '规格参数', width: '20%', sort: true}
+                ,{field: 'goodsUnit', title: '单位', width: '10%', sort: true}
+                ,{field: 'goodsNumber', title: '库存量', width: '10%', sort: true}
+                ,{title: '操作', toolbar: '#itemBar', width:'5%',fixed: 'right'}
+            ]]
+        });
+        table.on('sort(test)', function(obj){
+            console.log(obj.field);
+            console.log(obj.type);
+
+            table.reload('alist', {
+                initSort: obj
+                ,where: {
+                    field: obj.field
+                    ,order: obj.type
+                }
+            });
+            l//ayer.msg('服务端排序。order by '+ obj.field + ' ' + obj.type);
+        });
+
+        tempApplyListIns = table.render({
+            elem: '#demo1'
+            ,height: 280
+            //,url: '#' //数据接口
+            ,page: true //开启分页
+            ,id: 'mylist'
+            ,cols: [[ //表头
+                // {type: 'checkbox', width:40, fixed: 'left'},
+                {type: 'numbers', title: '序号', width:'5%', fixed: 'left'}
+                ,{field: 'goodsId', hide:true, title: '物品名称'}
+                ,{field: 'goodsName', title: '物品名称', width:'10%'}
+                ,{field: 'goodsKind', title: '类别', width:'10%'}
+                ,{field: 'goodsBrand', title: '品牌', width:'10%'}
+                ,{field: 'goodsModel', title: '型号', width: '15%'}
+                ,{field: 'goodsPram', title: '规格参数', width: '15%'}
+                ,{field: 'goodsUnit', title: '单位', width: '5%'}
+                ,{field: 'goodsNumber', title: '库存量', width: '5%'}
+                ,{field: 'number', title: '本次报废的数量', width: '20%', sort: true,edit:'text'}
+                ,{title: '操作', toolbar: '#itemBar1', width:'5%',fixed: 'right'}
+            ]]
+        });
+
+        //监听表格行工具栏（上表）
+        table.on('tool(test)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+            if(layEvent === 'addIt'){
+                var datas = table.cache.mylist;
+                if(datas == null){
+                    datas = [];
+                }
+                //console.log(datas);
+                datas.push(data);
+                tempApplyListIns.reload({data:datas});
+            }
+        });
+        //监听表格行工具（下表）
+        table.on('tool(test1)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+            if(layEvent === 'removeIt'){
+                obj.del();
+            }
+            var datas = table.cache.mylist;
+            console.log(datas);
+            var new_datas = [];
+            for(var i in datas){
+                var item = datas[i];
+                if(item.length != 0){
+                    new_datas[new_datas.length] = item;
+                }
+            }
+            //datas.push(data);
+            table.cache.mylist = new_datas;
+            tempApplyListIns.reload({data:new_datas});
+        });
+
+
+    });
+</script>
+<!-- 功能 -->
+<script>
+    function search() {
+        var text = document.getElementById('searchText').value;
+        tableIns.reload({
+            where:{search: text}
+        })
+    }
+    //打开借出/领取信息窗口
+    function showPanel() {
+        var datas = table.cache.mylist;
+        if(datas == null){
+            layer.msg("请先在上表选择要借出/领取的物品");
+            return;
+        }
+        var goodsKinds = 0;
+        var numbers = 0;
+        var list = [];
+        for(var i in datas){
+            var item = datas[i];
+            var num = item.number;
+            if(num == null || num == '' || num == 0){
+                layer.msg("请先填写下表中\"" + item.goodsName + "\"的数量");
+                return;
+            }
+            if(num > item.goodsNumber){
+                layer.msg("物品\"" + item.goodsName + "\"的数量不能大于物品库存总数");
+                return;
+            }
+            numbers += (num * 1);
+            goodsKinds++;
+            var obj = {};
+            obj.goodsId = item.goodsId;
+            obj.scrapNumber = item.number * 1;
+            list[list.length] = obj;
+        }
+
+        layer.confirm(
+            '本次报废物品'+goodsKinds+'样，共'+numbers+'计件，是否确定?',
+            {icon: 3, title:'物品报废'},
+            function(index){
+                scrapGoods(list);
+                layer.close(index);
+            }
+        );
+    }
+
+    //报废
+    function scrapGoods(list) {
+        console.log(list);
+        $.ajax({
+            url : "gmanager/scrapGoods",
+            type : 'post',
+            dataType : 'json',
+            data: JSON.stringify(list),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            success : function(ret) {
+                console.log(ret);
+                if (ret){
+                    layer.msg("报废成功");
+                    tableIns.reload({});
+                    layer.close(currentLayer);
+                } else {
+                    layer.msg("出错了，报废失败");
+                }
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+
+</script>
+
+</html>

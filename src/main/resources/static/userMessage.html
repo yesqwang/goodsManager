@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户信息</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    .layerPanel{
+        padding: 20px;
+        text-align: center;
+    }
+</style>
+<body>
+    <div style="margin: 30px;">
+        <div style="text-align: center; font-size: 30px;"> 个人信息详情</div>
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">账号</label>
+                <div class="layui-input-block">
+                    <input type="text" id="userid" name="userid" placeholder="用户账号" class="layui-input" disabled>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">身份</label>
+                <div class="layui-input-block">
+                    <input type="text" id="identity" name="identity" placeholder="用户账号" class="layui-input" disabled>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户名</label>
+                <div class="layui-input-block">
+                    <input type="text" id="username" name="username" required  lay-verify="required" placeholder="输入新用户名" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">学院</label>
+                <div class="layui-input-block">
+                    <input type="text" name="college" id="college" required  lay-verify="required" placeholder="请输入学院名称" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">系别</label>
+                <div class="layui-input-block">
+                    <input type="text" name="department" id="department" required  lay-verify="required" placeholder="请输入系别" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="updateIt">提交修改</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+        <a href="javascript:showChangePwdPanel();">修改密码</a>
+    </div>
+</body>
+
+<!-- 弹出层：手动添加申请 -->
+<div id="changePwdPanel" style="display: none; padding: 20px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <label class="layui-form-label">原密码</label>
+            <div class="layui-input-block">
+                <input type="password" id="oldpwd" name="oldpwd" placeholder="请输入旧密码" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新密码</label>
+            <div class="layui-input-block">
+                <input type="password" id="npwd" name="npwd" placeholder="请输入新密码" class="layui-input" >
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">新密码</label>
+            <div class="layui-input-block">
+                <input type="password" id="anpwd" name="anpwd" placeholder="请再次输入新密码" class="layui-input" >
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="updatePwd">提交修改</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!--加载组件-->
+<script>
+    var layerIns;
+    var layer;
+    layui.use(['table','form','layer'], function(){
+        var table = layui.table;
+        var form = layui.form;
+        layer = layui.layer;
+
+        //修改基本参数
+        form.on('submit(updateIt)', function(data){
+            console.log(data.field);
+            $.ajax({
+                url : "normal/updateUserMessage",
+                type : 'post',
+                dataType : 'json',
+                data: data.field,
+                success : function(ret) {
+                    console.log(ret);
+                    if (!ret){
+                        layer.msg('出错了');
+                    } else {
+                        layer.msg('修改成功');
+                        getMessage();
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+            return false;
+        });
+
+        //修改密码
+        form.on('submit(updatePwd)', function(data){
+            console.log(data.field);
+            var d = data.field;
+            if (d.anpwd != d.npwd){
+                layer.msg('两次新密码不一致');
+                return false;
+            }
+            $.ajax({
+                url : "normal/updatePwd",
+                type : 'post',
+                dataType : 'json',
+                data: {
+                    oldpassword: d.oldpwd,
+                    newpassword: d.npwd
+                },
+                success : function(ret) {
+                    console.log(ret);
+                    if (!ret){
+                        layer.msg('出错了，请检查原密码是否正确');
+                    } else {
+                        layer.msg('修改成功');
+                        layer.colse(layerIns);
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+            return false;
+        });
+    });
+</script>
+<!-- 功能 -->
+<script>
+    //获取用户基本信息
+    function getMessage() {
+        $.ajax({
+            url : "normal/getUserMessage",
+            type : 'post',
+            dataType : 'json',
+            data: {},
+            success : function(ret) {
+                console.log(ret);
+                if (ret == null){
+                    layer.msg('出错了');
+                } else {
+                    document.getElementById('userid').value = ret.userid;
+                    document.getElementById('identity').value = ret.identity;
+                    document.getElementById('username').value = ret.username;
+                    document.getElementById('college').value = ret.college;
+                    document.getElementById('department').value = ret.department;
+
+                }
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+    getMessage();
+
+
+    //显示密码修改窗口
+    function showChangePwdPanel() {
+        layerIns = layer.open({
+            type: 1,
+            title: '修改密码',
+            area: ['500px', '300px'],
+            content: layui.$('#changePwdPanel')
+        });
+    }
+</script>
+
+</html>

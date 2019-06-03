@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>库存表</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    .layerPanel{
+        padding: 20px;
+        text-align: center;
+    }
+</style>
+<body>
+    <div >
+        <!--<button class="layui-btn" onclick="">去借物品</button>
+        <button class="layui-btn layui-btn-warm">将选中项导出申请表</button>-->
+        <div class="layui-inline">
+            <form class="layui-form">
+                <select  lay-filter="kinds">
+                    <option value="showBorrowing">只显示未还物品</option>
+                    <option value="showBorrow">只显示已借物品</option>
+                    <option value="showGive">只显示领取物品</option>
+                    <option value="showAllHistory">显示全部历史</option>
+                </select>
+            </form>
+        </div>
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</body>
+
+<!-- 行工具栏 -->
+<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="cancelApply">取消申请</a>
+</script>
+<!--加载组件-->
+<script>
+    layui.use(['table','form','layer'], function(){
+        var table = layui.table;
+        var layer = layui.layer;
+        var form = layui.form;
+
+        //初始化表格
+        var tableIns = table.render({
+            elem: '#demo'
+            ,height: 'full-50'
+            ,url: 'normal/getUserGoodsBorrow' //数据接口
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {type: 'numbers', title: '序号', fixed: 'left', width:'5%'}
+                ,{field: 'goodsName', title: '物品名称', width:180}
+                ,{field: 'goodsKind', title: '类别', width:80}
+                ,{field: 'goodsBrand', title: '品牌', width:80}
+                ,{field: 'goodsModel', title: '型号', width: 177}
+                ,{field: 'goodsPram', title: '规格参数', width: 180}
+                ,{field: 'goodsUnit', title: '单位', width: 80}
+                ,{field: 'username', title: '借取人', width: 100, sort: true}
+                ,{field: 'borrowTime', title: '借出时间', width: 180, sort: true}
+                ,{field: 'busername', title: '借出经手人', width: 100, sort: true}
+                ,{field: 'willReturnDate', title: '应还时间', width: 180, sort: true}
+                ,{field: 'reNumber', title: '已还数量', width: 100, sort: true}
+                ,{field: 'reDate', title: '上次归还日期', width: 180, sort: true}
+                ,{field: 'reusername', title: '归还经手人', width: 100, sort: true}
+                ,{field: 'note', title: '备注', width: 100, sort: true}
+                ,{field: 'number', title: '借出数量', width: 135, sort: true, fixed:'right'}
+                ,{field: 'status', title: '借出状态', width: 100, sort: true, fixed:'right'}
+                //,{title: '操作', width: 135, toolbar: '#itemBar', width:'5%',fixed: 'right'}
+            ]]
+            ,parseData: function(res){ //res 即为原始返回的数据
+                console.log(res);
+                return res;
+            }
+        });
+
+        form.on('select(kinds)', function(data){
+            console.log(data.value); //得到被选中的值
+            var sl = data.value;
+            tableIns.reload({where:{kinds:sl}});
+        });
+
+        /*//行工具栏监听
+        table.on('tool(test)', function(obj){
+            var data = obj.data;
+            var layEvent = obj.event;
+
+            if(layEvent === 'giveIt'){
+                //console.log(data);
+                document.getElementById('giveName').innerText = data.goodsName;
+                layer.open({
+                    type: 1,
+                    title: '请确定领取数量',
+                    content: $('#initGiveNumber'),
+                    btn: ['确定', '取消'],
+                    yes: function(index, layero){
+                        var gsid = data.goodsId;
+                        var gnumber = document.getElementById('giveNumber').value;
+                        borrowOrGive(false,gsid,gnumber);
+                        layer.close(index);
+                    },
+                    cancel: function(index, layero){}
+                });
+            } else if(layEvent === 'borrowIt'){
+                document.getElementById('borrowName').innerText = data.goodsName;
+                layer.open({
+                    type: 1,
+                    title: '请确定领取数量',
+                    content: $('#initBorrowNumber'),
+                    btn: ['确定', '取消'],
+                    yes: function(index, layero){
+                        var gsid = data.goodsId;
+                        var gnumber = document.getElementById('borrowNumber').value;
+                        borrowOrGive(true,gsid,gnumber);
+                        layer.close(index);
+                    },
+                    cancel: function(index, layero){}
+                });
+            }
+        });*/
+    });
+</script>
+<!-- 功能 -->
+<script>
+
+</script>
+
+</html>

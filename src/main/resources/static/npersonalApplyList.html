@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>我的申请采购</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    .layui-form-mid{
+        margin-left: 30px;
+    }
+</style>
+<body>
+    <div class="layui-row">
+        <!--<div class="layui-col-xs5 layui-col-sm5 layui-col-md5" style="margin-left: 20px;">
+            <button class="layui-btn" onclick="cancelApply()">取消申请选中物品</button>
+        </div>-->
+        <!--<div class="layui-col-xs6 layui-col-sm6 layui-col-md6" style="text-align: right; padding-right: 20px;">
+            <button class="layui-btn layui-btn-normal" onclick="showAddPanel()">手动添加</button>
+        </div>-->
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</body>
+<!-- 弹出层：手动添加申请 -->
+<div id="addApplyPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">物品名称</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsName" placeholder="物品名称" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid">类别</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsKind" placeholder="类别" class="layui-input" list="kinds"/>
+                    <datalist id="kinds"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">品牌</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsBrand" list="brands" placeholder="物品类别" autocomplete="off" class="layui-input">
+                    <datalist id="brands"></datalist>
+                </div>
+                <div class="layui-form-mid">型号</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsModel" placeholder="物品型号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">规格参数</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="goodsPram" required lay-verify="required" placeholder="规格参数" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <div class="layui-form-label">使用对象</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <div class="layui-input-block" style="margin-left: 0px;">
+                        <select name="whoUses" id="whoUses" lay-filter="whoUse" lay-verify="required"></select>
+                    </div>
+                </div>
+                <div class="layui-form-mid">单位</div>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="text" name="goodsUnit" list="units" placeholder="物品单位" autocomplete="off" class="layui-input">
+                    <datalist id="units"></datalist>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">估计单价</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" name="goodsPrice" placeholder="估计单价" autocomplete="off" class="layui-input">
+                </div>
+                <label class="layui-form-mid">数量</label>
+                <div class="layui-input-inline" style="width: 200px;">
+                    <input type="number" name="goodsNumber" placeholder="采购数量" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">用途</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="whatToDo" required lay-verify="required" placeholder="用途" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">采购网址</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="url" required lay-verify="required" placeholder="URL" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">备注</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <textarea name="note" placeholder="请输入内容" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="toAddApply">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 行工具栏 -->
+<script type="text/html" id="itemBar">
+    {{# if(d.status === '正在申请'){ }}
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="deleteIt">取消申请</a>
+    {{#  } }}
+    <!--<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="deleteIt">{{d.status}}</a>-->
+   <!-- <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="deleteIt">取消申请</a>-->
+</script>
+<!-- 加载组件 -->
+<script>
+    var layer;
+    var table;
+    var form;
+    var tableIns;
+    layui.use(['layer','form','table','jquery'], function(){
+        layer = layui.layer;
+        form = layui.form;
+        table = layui.table;
+
+        //第一个实例
+        tableIns = table.render({
+            elem: '#demo'
+            ,id: 'glist'
+            ,height: 'full-60'
+            ,url: 'normal/getWhoApplyList' //数据接口
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {type: 'checkbox', width:40, fixed: 'left'}
+                ,{field: 'goodsId', title: 'ID', width:60, fixed: 'left'}
+                ,{field: 'goodsName', title: '物品名称', width:180,fixed: 'left'}
+                ,{field: 'goodsBrand', title: '类别', width:80}
+                ,{field: 'goodsBrand', title: '品牌', width:80}
+                ,{field: 'goodsModel', title: '型号', width: 177}
+                ,{field: 'goodsPram', title: '规格参数', width: 180}
+                ,{field: 'goodsUnit', title: '单位', width: 80}
+                ,{field: 'applyer', title: '数量', width: 80}
+                ,{field: 'goodsPrice', title: '单价', width: 105}
+                ,{field: 'applyDate', title: '申请日期', width: 105}
+                ,{field: 'status', title: '采购状态', width:100}
+                ,{field: 'whoUses', title: '使用对象', width:100}
+                ,{field: 'whatToDo', title: '用途', width:120}
+                //,{field: 'wealth', title: '操作', width: 135, toolbar: '#itemBar', width:115, fixed: 'right'}
+            ]]
+            ,parseData: function(res){ //res 即为原始返回的数据
+                console.log(res);
+                return res;
+            }
+        });
+
+        form.on('submit(toAddApply)', function(data){
+            //layer.msg(JSON.stringify(data.field));
+            layui.$.post("normal/addPersonalApply",data.field,function(res){
+                console.log(res);
+                if(res){
+                    layer.msg("添加成功！");
+                    tableIns.reload({});
+                }
+            },'json');
+            return false;
+        });
+
+        //监听表格列工具条事件
+        table.on('tool(test)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event;
+            if(layEvent == 'editIt'){ //查看
+                console.log(data);
+            } else if(layEvent == 'deleteIt'){ //删除
+                layer.confirm('真的删除行么', function(index){
+                    deletePersonalApply(data.goodsId);
+                    layer.close(index);
+                });
+            }
+        });
+    });
+
+
+</script>
+<!--ajax加载页面选项参数-->
+<script>
+    //获取物品类型
+    $.ajax({
+        url : "initPage/getAllGoodsKinds",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var kinds = document.getElementById('kinds');
+            kinds.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                kinds.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品品牌
+    $.ajax({
+        url : "initPage/getAllGoodsBrands",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var brands = document.getElementById('brands');
+            brands.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                brands.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品单位
+    $.ajax({
+        url : "initPage/getAllGoodsUnit",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var units = document.getElementById('units');
+            units.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                units.appendChild(op);
+            }
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+    //获取物品使用对象
+    $.ajax({
+        url : "initPage/getAllGoodsUser",
+        type : 'post',
+        dataType : 'json',
+        success : function(ret) {
+            //console.log(ret);
+            var whoUses = document.getElementById('whoUses');
+            whoUses.innerHTML = "";
+            for(var i in ret){
+                var name = ret[i];
+                var op = document.createElement('option');
+                op.value = name;
+                op.innerText = name;
+                whoUses.appendChild(op);
+            }
+            layui.use('form', function(){
+                layui.form.render('select');
+            });
+
+        },
+        error : function(prm1, prm2, prm3) {
+            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+        }
+    });
+</script>
+<!--功能-->
+<script>
+
+    //打开手动添加申请弹出层
+    function showAddPanel() {
+        layer.open({
+            type: 1,
+            title: '新增申请',
+            area: ['800px', '600px'],
+            content: layui.$('#addApplyPanel')
+        });
+    }
+
+    //将勾选上的物品id传递给后台添加到申请总表
+    function addGoodsToTotalApply() {
+        var checkStatus = table.checkStatus('glist');
+        //console.log(checkStatus.data);
+        var data = checkStatus.data;
+        var ids = [];
+        for(var i in data){
+            var id = data[i].goodsId;
+            ids[ids.length] = id;
+        }
+        console.log(ids);
+        var idList = JSON.stringify(ids);
+        console.log(idList);
+        $.ajax({
+            url : "normal/addPersonalApplyToApply",
+            type : 'post',
+            dataType : 'json',
+            data: {
+                ids: ids
+            },
+            success : function(ret) {
+                console.log(ret);
+
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+
+    //删除单行数据
+    function deletePersonalApply(paid) {
+        console.log(paid);
+        $.ajax({
+            url : "normal/deleteApply",
+            type : 'post',
+            dataType : 'json',
+            data: { gid: paid },
+            success : function(ret) {
+                console.log(ret);
+                if (ret){
+                    layer.msg("删除成功");
+                } else {
+                    layer.msg("出错了，删除失败");
+                }
+                tableIns.reload({});//重新加载表格
+            },
+            error : function(prm1, prm2, prm3) {layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);}
+        });
+    }
+
+    //删除选中行
+    function cancelApply() {
+        var ids = [];
+        var data = table.checkStatus('glist').data;
+        for(var i in data){
+            var item = data[i];
+            var id = data[i].goodsId;
+            if(item.status != '正在申请'){
+                layer.msg("请不要勾选状态非“正在申请”的物品");
+                return;
+            }
+            ids[ids.length] = id;
+        }
+        console.log(ids);
+        $.ajax({
+            url : "normal/deleteApplys",
+            type : 'post',
+            dataType : 'json',
+            data: {
+                ids: ids
+            },
+            success : function(ret) {
+                console.log(ret);
+                if (ret){
+                    layer.msg("删除成功");
+                } else {
+                    layer.msg("出错了，删除失败");
+                }
+                tableIns.reload({});//重新加载表格
+            },
+            error : function(prm1, prm2, prm3) {
+                layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+            }
+        });
+    }
+
+</script>
+</html>

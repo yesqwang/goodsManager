@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户总表</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<body>
+    <div>
+        <button class="layui-btn layui-btn-normal" onclick="addUser()">添加用户</button>
+    </div>
+    <table id="demo" lay-filter="test"></table>
+</body>
+
+<!-- 弹出层：新增用户 -->
+<div id="addUserPanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <label class="layui-form-label">账号</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="userid" id="userid" placeholder="用户登录账号" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">密码</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="password" id="password" placeholder="用户登录密码" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="username" id="username" placeholder="用户姓名" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">性别</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="radio" name="sex" value="man"  lay-filter="isb" title="男" checked>
+                <input type="radio" name="sex" value="sheman" lay-filter="isb" title="女">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">学院</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="college" id="college" placeholder="学院名称" value="计算机科学与软件学院·大数据学院" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">系别</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="department" id="department" placeholder="系别名称" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">身份</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <select name="identity" id="identity" lay-filter="identity" lay-verify="required">
+                    <option value="normal">普通用户</option>
+                    <option value="admin">物管员</option>
+                    <option value="both">物管员+普通用户</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="toAdd">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 行工具栏 -->
+<script type="text/html" id="itemBar">
+    <a class="layui-btn layui-btn-xs" lay-event="delete">删除</a>
+    <a class="layui-btn layui-btn-xs" lay-event="changePermission">改权限</a>
+</script>
+<!--加载组件-->
+<script>
+    var currentLayer;
+    var tableIns;
+    var table;
+    var layer;
+    var form;
+    layui.use(['table','form','layer'], function(){
+        table = layui.table;
+        layer = layui.layer;
+        form = layui.form;
+
+        //第一个实例
+        tableIns = table.render({
+            elem: '#demo'
+            ,height: 'full-50'
+            ,url: 'gmanager/getUserList' //数据接口
+            ,id: 'alist'
+            ,page: true //开启分页
+            ,cols: [[ //表头
+                {title: '序号', width:'5%', type: "numbers"}
+                ,{field: 'userid', title: '账号', width:'15%',edit:'text',sort: true}
+                ,{field: 'username', title: '用户名', width:'10%',edit:'text',sort: true}
+                ,{field: 'college', title: '学院', width:'15%',edit:'text', sort: true}
+                ,{field: 'department', title: '系别', width: '15%',edit:'text', sort: true}
+                ,{field: 'password', title: '密码', width: '15%',edit:'text', sort: true}
+                ,{field: 'identity', title: '身份', width: '10%'}
+                ,{title: '操作', width: 135, toolbar: '#itemBar', width:'15%',fixed: 'right'}
+            ]]
+        });
+
+        //监听表格排序
+        table.on('sort(test)', function(obj){
+            console.log(obj.field);
+            console.log(obj.type);
+            table.reload('alist', {
+                initSort: obj
+                ,where: {
+                    field: obj.field
+                    ,order: obj.type
+                }
+            });
+        });
+
+        //监听行工具栏
+        table.on('tool(test)', function(obj){
+            var data = obj.data; //获得当前行数据
+            var layEvent = obj.event;
+            if(data.userid == 'admin'){
+                layer.msg("管理员用户Admin不可被删除！");
+                return;
+            }
+            if(layEvent == 'delete'){ //删除
+                layer.confirm('真的删除行么', function(index){
+                    $.ajax({
+                        url : "gmanager/deleteUser",
+                        type : 'post',
+                        dataType : 'json',
+                        data: {
+                            id: data.userid
+                        },
+                        success : function(ret) {
+                            console.log(ret);
+                            if (ret){
+                                layer.msg("删除成功！");
+                                tableIns.reload({});
+                                layer.close(currentLayer);
+                            } else {
+                                layer.msg("出错了，删除失败");
+                            }
+                        },
+                        error : function(prm1, prm2, prm3) {
+                            layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                        }
+                    });
+                    layer.close(index);
+                });
+            }else if(layEvent == "changePermission"){
+                layer.alert("功能尚未实现");
+            }
+        });
+
+        table.on('edit(test)', function(obj){
+            console.log(obj.value); //得到修改后的值
+            console.log(obj.field); //当前编辑的字段名
+            console.log(obj.data); //所在行的所有相关数据
+            $.ajax({
+                url : "gmanager/editUser",
+                type : 'post',
+                dataType : 'json',
+                data: obj.data,
+                success : function(ret) {
+                    console.log(ret);
+                    if (ret){
+                        layer.msg("修改成功！");
+                        tableIns.reload({});
+                        layer.close(currentLayer);
+                    } else {
+                        layer.msg("出错了，修改失败");
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+        });
+
+        //新增用户
+        form.on('submit(toAdd)', function(data){
+            console.log(data.field);
+            $.ajax({
+                url : "gmanager/addUser",
+                type : 'post',
+                dataType : 'json',
+                data: data.field,
+                success : function(ret) {
+                    console.log(ret);
+                    if (ret){
+                        layer.msg("添加成功！");
+                        tableIns.reload({});
+                        layer.close(currentLayer);
+                    } else {
+                        layer.msg("出错了，添加失败");
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+            return false;
+        });
+    });
+
+</script>
+
+<script>
+    //弹出新增用户窗口
+    function addUser() {
+        currentLayer = layer.open({
+            type: 1,
+            title: '添加用户',
+            area: ['650px', '500px'],
+            content: layui.$('#addUserPanel')
+        });
+    }
+</script>
+</html>

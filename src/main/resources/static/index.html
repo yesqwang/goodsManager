@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>用户登录</title>
+    <link rel="stylesheet" href="layui/css/layui.css"/>
+    <script src="layui/layui.js"></script>
+    <script src="js/jquery-2.2.4.min.js"></script>
+</head>
+<style>
+    body{
+        background-image: url("img/loginBG.jpg");
+        background-repeat: no-repeat;
+        background-size: 100vw 100vh;
+    }
+    .layui-form{
+        width: 468px;
+       /* height: 211px;*/
+        background-color: skyblue;
+        padding: 30px;
+        text-align: right;
+        border-radius: 28px;
+        border: 3px double blue;
+    }
+    .layui-form-select{
+        text-align: left;
+    }
+    .layui-form-label{
+        width: 28px;
+    }
+    .layui-input-block{
+        margin-left: 60px;
+    }
+    .stitle{
+        text-align: center;
+        font-family: "华文行楷";
+        font-size: 85px;
+        margin-top: 80px;
+        margin-bottom: 130px;
+        color: mediumblue;
+    }
+</style>
+<body>
+    <div class="stitle">低值易耗物资管理系统</div>
+    <center>
+    <!--<div class="loginPanel">-->
+        <form class="layui-form" action="login/userLoggin" method="post">
+            <div class="layui-form-item">
+                <label class="layui-form-label">账号</label>
+                <div class="layui-input-block">
+                    <input type="text" name="userid" required  lay-verify="required" placeholder="请输入用户账号" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">密码</label>
+                <div class="layui-input-block">
+                    <input type="password" name="password" required  lay-verify="required" placeholder="请输入用户密码" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">身份</label>
+                <div class="layui-input-block">
+                    <select name="identity" lay-verify="required">
+                        <option value="1">普通用户</option>
+                        <option value="2">物管员</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item" style="margin-bottom: 0px;">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="formDemo">登录</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    <!--</div>-->
+    </center>
+</body>
+<script>
+    function getQueryString(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            if(pair[0] == variable){return pair[1];}
+        }
+        return(false);
+    }
+    //Demo
+    var layer;
+    layui.use(['form','layer'], function(){
+        var form = layui.form;
+        layer = layui.layer;
+        //监听提交
+        form.on('submit(formDemo)', function(data){
+            //layer.msg(JSON.stringify(data.field));
+            //return false;
+        });
+        var emsg = getQueryString('err');
+        if (emsg != null && emsg != ''){
+            console.log(emsg);
+            layer.msg("账号或密码出错");
+        }
+    });
+
+
+
+
+</script>
+</html>
