@@ -1,5 +1,10 @@
 package goods.service.impl;
 
+import com.alibaba.excel.ExcelReader;
+import com.alibaba.excel.context.AnalysisContext;
+import com.alibaba.excel.event.AnalysisEventListener;
+import com.alibaba.excel.metadata.Sheet;
+import com.alibaba.excel.support.ExcelTypeEnum;
 import goods.mapper.GoodsBorrowMapper;
 import goods.mapper.GoodsStoreMapper;
 import goods.mapper.UserMapper;
@@ -7,10 +12,12 @@ import goods.pojo.*;
 import goods.service.GoodsApplyService;
 import goods.service.GoodsStoreService;
 import goods.vo.*;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,6 +32,7 @@ import java.util.List;
 @Transactional
 @Service("goodsStoreService")
 public class GoodsStoreServiceImpl implements GoodsStoreService {
+    Logger log = Logger.getLogger(GoodsStoreMapper.class);
 
     //物品借出状态
     private static String BORROW_STATUS_BORROWING = "已借出";
@@ -80,8 +88,10 @@ public class GoodsStoreServiceImpl implements GoodsStoreService {
         store.setGoodsParm(pageGoodsStore.getGoodsPram());
         store.setGoodsUnit(applyService.getGoodsUnitByUnitName(pageGoodsStore.getGoodsUnit()).getUnid());
         store.setGoodsNumber(pageGoodsStore.getGoodsNumber());
-        store.setGoodsGiveNumber(pageGoodsStore.getGiveNumber());
-        store.setGoodsBorrowNumber(pageGoodsStore.getBorrowNumber());
+        Integer giveNum = pageGoodsStore.getGiveNumber();
+        Integer borrowNum = pageGoodsStore.getBorrowNumber();
+        store.setGoodsGiveNumber(giveNum == null ? 0 : giveNum);
+        store.setGoodsBorrowNumber(borrowNum == null ? 0 : borrowNum);
         store.setNote(pageGoodsStore.getNote());
         return store;
     }
@@ -265,7 +275,8 @@ public class GoodsStoreServiceImpl implements GoodsStoreService {
         giveOrBorrow.setBorrowTime(dateStr);
         giveOrBorrow.setNumber(borrow.getNumber());
         giveOrBorrow.setStatus(borrow.getStatus());
-        giveOrBorrow.setUsername(getUserByUserId(borrow.getUserId()).getUserName());
+        User user = getUserByUserId(borrow.getUserId());
+        giveOrBorrow.setUsername(user == null ? borrow.getUserId(): user.getUserName());
         giveOrBorrow.setBusername(borrow.getBorrowUserId());
         Date wdate = borrow.getWillReturnDate();
         giveOrBorrow.setWillReturnDate(wdate == null ? "" : format.format(wdate));
@@ -296,22 +307,6 @@ public class GoodsStoreServiceImpl implements GoodsStoreService {
             GoodsStore goodsStore = getGoodsStoreById(gid);
             PageGoodsStore store = changeGoodsStoreToPageGoodsStore(goodsStore);
             PageGoodsGiveOrBorrow giveOrBorrow = changeGoodsBorrowToPageGoodsGiveOrBorrow(store, borrow);
-            /*PageGoodsGiveOrBorrow giveOrBorrow = new PageGoodsGiveOrBorrow(store);
-            giveOrBorrow.setGbid(borrow.getGbid());
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-            String dateStr = format.format(borrow.getBorrowDate());
-            giveOrBorrow.setBorrowTime(dateStr);
-            giveOrBorrow.setNumber(borrow.getNumber());
-            giveOrBorrow.setStatus(borrow.getStatus());
-            giveOrBorrow.setUsername(getUserByUserId(borrow.getUserId()).getUserName());
-            giveOrBorrow.setBusername(borrow.getBorrowUserId());
-            Date wdate = borrow.getWillReturnDate();
-            giveOrBorrow.setWillReturnDate(wdate == null ? "" : format.format(wdate));
-            giveOrBorrow.setNote(borrow.getNote());
-            giveOrBorrow.setReNumber(borrow.getReturnNumber() == null ? 0 : borrow.getReturnNumber());
-            giveOrBorrow.setReusername(borrow.getReturnUserId());
-            Date rdate = borrow.getReturnDate();
-            giveOrBorrow.setReDate(rdate == null ? "" : format.format(rdate));*/
 
             borrowss.add(giveOrBorrow);
         }
@@ -492,5 +487,52 @@ public class GoodsStoreServiceImpl implements GoodsStoreService {
         store.setGoodsNumber(store.getGoodsNumber() + returnNumber);
         storeMapper.updateByPrimaryKeySelective(store);
         return true;
+    }
+
+    /**
+     * 将模型对象转变成数据库对象，方便插入
+     * @param model
+     * @return
+     */
+    private GoodsStore changeExportToDb(ExportModelFile model){
+        if(null == model){
+            return null;
+        }
+        GoodsApplyServiceImpl applyService = (GoodsApplyServiceImpl)goodsApplyService;
+        GoodsStore store = new GoodsStore();
+        store.setGoodsName(model.getName());
+        store.setGoodsModel(model.getModel());
+        store.setGoodsKind(applyService.getGoodsKindByKindName(model.getKind()).getKid());
+        store.setGoodsBrand(applyService.getGoodsBrandByBrandName(model.getBrand()).getBid());
+        store.setGoodsUnit(applyService.getGoodsUnitByUnitName(model.getUnit()).getUnid());
+        store.setGoodsNumber(Integer.parseInt(model.getNumber()));
+        store.setGoodsGiveNumber(0);
+        store.setGoodsBorrowNumber(0);
+        return store;
+    }
+
+    @Override
+    @Transactional
+    public void pauseExportModelFile(InputStream is, String filename) {
+        try{
+            ExcelReader excelReader = null;
+            ExcelReaderListener listener = new ExcelReaderListener();
+            if(filename.endsWith(".xlsx")){
+                excelReader = new ExcelReader(is, ExcelTypeEnum.XLSX, null,listener);
+            }else if(filename.endsWith(".xls")){
+                excelReader = new ExcelReader(is, ExcelTypeEnum.XLS, null,listener);
+            }else{
+                throw new RuntimeException("文件不支持");
+            }
+            excelReader.read(new Sheet(1,1),ExportModelFile.class);
+            List<ExportModelFile> list = listener.getList();
+            log.info("列表长度：" + list.size());
+            for(ExportModelFile model : list){
+                GoodsStore store = changeExportToDb(model);
+                storeMapper.insert(store);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

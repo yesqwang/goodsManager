@@ -7,6 +7,7 @@ import goods.pojo.*;
 import goods.service.UserService;
 import goods.vo.PageUser;
 import goods.vo.PageUserShow;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.List;
 @Service("userService")
 @Transactional
 public class UserServiceImpl implements UserService {
+    Logger log = Logger.getLogger(UserService.class);
 
     @Autowired
     UserMapper userMapper;
@@ -30,6 +32,11 @@ public class UserServiceImpl implements UserService {
     UserIdentityMapper userIdentityMapper;
     @Autowired
     IdentitysMapper identitysMapper;
+
+    private static String NORMAL = "normal";
+    private static String ADMIN = "admin";
+    private static String ADMIN_AND_NORMAL = "both";
+
 
     @Override
     public boolean checkUser(PageUser pageUser) {
@@ -200,5 +207,74 @@ public class UserServiceImpl implements UserService {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean changeRole(String userid, String identity) {
+        log.info("用户id=" + userid + "，身份=" + identity);
+        if(null == identity || "".equals(identity.trim())){
+            return false;
+        }
+        if(userid.equals(ADMIN)){
+            return false;
+        }
+        // 查已有身份
+        UserIdentityExample example = new UserIdentityExample();
+        UserIdentityExample.Criteria criteria = example.createCriteria();
+        criteria.andUidEqualTo(userid);
+        List<UserIdentityKey> roleList = userIdentityMapper.selectByExample(example);
+
+        boolean flag = false; //标记是否已有该权限
+        if(identity.equals(ADMIN)){
+            for(UserIdentityKey role : roleList){
+                if(role.getIid()==1){
+                    userIdentityMapper.deleteByPrimaryKey(role);
+                }else if(role.getIid() == 2){
+                    flag = true;
+                }
+            }
+            if(!flag){
+                UserIdentityKey key = new UserIdentityKey();
+                key.setIid(2);
+                key.setUid(userid);
+                userIdentityMapper.insert(key);
+            }
+        }else if(identity.equals(NORMAL)){
+            for(UserIdentityKey role : roleList){
+                if(role.getIid()==2){
+                    userIdentityMapper.deleteByPrimaryKey(role);
+                }else if(role.getIid() == 1){
+                    flag = true;
+                }
+            }
+            if(!flag){
+                UserIdentityKey key = new UserIdentityKey();
+                key.setIid(1);
+                key.setUid(userid);
+                userIdentityMapper.insert(key);
+            }
+        }else if(identity.equals(ADMIN_AND_NORMAL)){
+            boolean flag2 = false;
+            for(UserIdentityKey role : roleList){
+                if(role.getIid()==1){
+                    flag = true;
+                }else if(role.getIid() == 2){
+                    flag2 = true;
+                }
+            }
+            if(!flag){
+                UserIdentityKey key = new UserIdentityKey();
+                key.setIid(1);
+                key.setUid(userid);
+                userIdentityMapper.insert(key);
+            }
+            if(!flag2){
+                UserIdentityKey key = new UserIdentityKey();
+                key.setIid(2);
+                key.setUid(userid);
+                userIdentityMapper.insert(key);
+            }
+        }
+        return true;
     }
 }

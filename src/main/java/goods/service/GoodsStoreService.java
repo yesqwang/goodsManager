@@ -2,6 +2,7 @@ package goods.service;
 
 import goods.vo.*;
 
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.List;
 
@@ -167,5 +168,9 @@ public interface GoodsStoreService {
      */
     List<PageGoodsGiveOrBorrow> getAllGoodsBorrowOrGiveList(int page, int limit, String field, String order, String search, String kind);
 
-
+    /**
+     * 解析导入文件
+     * @param is
+     */
+    void pauseExportModelFile(InputStream is, String filename);
 }

@@ -1,9 +1,5 @@
 package goods.controller;
 
-import com.alibaba.excel.ExcelWriter;
-import com.alibaba.excel.metadata.Sheet;
-import com.alibaba.excel.support.ExcelTypeEnum;
-import goods.mapper.UserMapper;
 import goods.pojo.Company;
 import goods.service.*;
 import goods.vo.*;
@@ -17,8 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.text.ParseException;
@@ -462,6 +459,11 @@ public class GoodsManagerController {
         return flag;
     }
 
+    /**
+     * 修改用户信息
+     * @param show
+     * @return
+     */
     @RequestMapping("editUser")
     @ResponseBody
     public boolean editUser(PageUserShow show){
@@ -475,6 +477,14 @@ public class GoodsManagerController {
         return flag;
     }
 
+    /**
+     * 获取采购公司列表
+     * @param page
+     * @param limit
+     * @param field
+     * @param order
+     * @return
+     */
     @ResponseBody
     @RequestMapping("getCompanyList")
     public PageListCompany getCompanyList(@RequestParam(defaultValue = "1") int page,
@@ -489,6 +499,11 @@ public class GoodsManagerController {
         return pageList;
     }
 
+    /**
+     * 删除采购公司
+     * @param id
+     * @return
+     */
     @RequestMapping("deleteCompany")
     @ResponseBody
     public boolean deleteCompany(int id){
@@ -502,6 +517,11 @@ public class GoodsManagerController {
         return flag;
     }
 
+    /**
+     * 添加采购公司
+     * @param company
+     * @return
+     */
     @ResponseBody
     @RequestMapping("addCompany")
     public boolean addCompany(Company company){
@@ -528,6 +548,11 @@ public class GoodsManagerController {
         return flag;
     }
 
+    /**
+     * 删除物品类型
+     * @param name
+     * @return
+     */
     @RequestMapping("deleteKinds")
     @ResponseBody
     public boolean deleteKinds(String name){
@@ -541,12 +566,83 @@ public class GoodsManagerController {
         return flag;
     }
 
+    /**
+     * 添加物品类型
+     * @param kind
+     * @return
+     */
     @ResponseBody
     @RequestMapping("addKind")
     public boolean addKind(PageGoodsKind kind){
         boolean flag = false;
         try {
             flag = initService.addKinds(kind);
+        }catch (Exception e){
+            e.printStackTrace();
+            logger.error(e.getMessage(), e);
+        }
+        return flag;
+    }
+
+    /**
+     * 下载模板表
+     * @param request
+     * @return
+     * @throws Exception
+     */
+    @ResponseBody
+    @RequestMapping("downloadModelExportExcel")
+    public ResponseEntity<byte[]> downloadModelExportExcel(HttpServletRequest request) throws Exception{
+        OutputStream os = initService.getExportModelFileOutputStream();
+        HttpStatus statusCode = HttpStatus.OK;//设置响应码
+        HttpHeaders headers=new HttpHeaders();//设置响应头
+        String fileName=new String(("库存导入模板表-低值易耗物资管理系统.xlsx").getBytes("gbk"),"iso8859-1");//防止中文乱码
+        headers.add("Content-Disposition", "attachment;filename="+fileName);
+        ResponseEntity<byte[]> response=new ResponseEntity<byte[]>(((ByteArrayOutputStream) os).toByteArray(), headers, statusCode);
+        return response;
+    }
+
+    /**
+     * 解析上传的模板文件文件
+     * @param file
+     * @return
+     * @throws IOException
+     */
+    @RequestMapping("uploadModelExportExcel")
+    @ResponseBody
+    public FileUploadMsg uploadModelExportExcel(@RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+        //用来检测程序运行时间
+        long  startTime=System.currentTimeMillis();
+        //System.out.println("fileName："+file.getOriginalFilename());
+        FileUploadMsg msg = new FileUploadMsg();
+        try {
+            InputStream is=file.getInputStream();
+            storeService.pauseExportModelFile(is, file.getOriginalFilename());
+            is.close();
+            msg.setCode(0);
+            msg.setMsg("success");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            msg.setCode(1);
+            msg.setMsg("failuer");
+        }
+        long  endTime=System.currentTimeMillis();
+        System.out.println("解析时间："+String.valueOf(endTime-startTime)+"ms");
+        return msg;
+    }
+
+    /**
+     * 修改用户权限
+     * @param userid
+     * @param identity
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("changeRole")
+    public boolean changeRole(String userid, String identity){
+        boolean flag = false;
+        try {
+            flag = userService.changeRole(userid, identity);
         }catch (Exception e){
             e.printStackTrace();
             logger.error(e.getMessage(), e);

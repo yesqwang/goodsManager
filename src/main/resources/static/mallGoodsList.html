@@ -17,8 +17,9 @@
     <div class="layui-row">
         <div class="layui-col-xs5 layui-col-sm5 layui-col-md5" style="padding-left: 20px;">
             <button class="layui-btn" onclick="showAdding()">手动添加库存</button>
-            <button class="layui-btn" onclick="javascript:layer.alert('功能尚未完成');">模板批量添加</button>
-            <a href="javascript:layer.alert('功能尚未完成');">模板表下载</a>
+            <!-- 使用layui上传文件功能，绑定id -->
+            <button class="layui-btn" id="uploadFile">模板批量添加</button>
+            <a href="/gmanager/downloadModelExportExcel">模板表下载</a>
         </div>
         <div class="layui-col-xs6 layui-col-sm6 layui-col-md6" style="text-align: right; padding-right: 20px;">
             <div class="layui-inline">
@@ -607,5 +608,29 @@
     }
 
 </script>
-
+<!-- 上传文件 -->
+<script>
+    layui.use('upload', function(){
+        var upload = layui.upload;
+        //执行实例
+        var uploadInst = upload.render({
+            elem: '#uploadFile' //绑定元素
+            ,url: '/gmanager/uploadModelExportExcel' //上传接口
+            ,accept: 'file'
+            ,acceptMime: 'application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' //允许上传的文件类型
+            ,done: function(res){
+                //上传完毕回调
+                console.log(res);
+                layer.alert("导入成功");
+            },error: function(index, upload){
+                //请求异常回调
+                console.log("---------------");
+                console.log(index);
+                console.log(index);
+                console.log("---------------");
+                layer.alert("导入失败");
+            }
+        });
+    });
+</script>
 </html>

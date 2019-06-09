@@ -73,6 +73,41 @@
     </form>
 </div>
 
+<!-- 弹出层：新增用户 -->
+<div id="changeUserRolePanel" style="display: none; padding-top: 10px;">
+    <form class="layui-form" action="#">
+        <div class="layui-form-item">
+            <label class="layui-form-label">账号</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" name="userid" id="uid" class="layui-input" disabled/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <input type="text" id="uname" class="layui-input" disabled/>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">身份</label>
+            <div class="layui-input-inline" style="width: 476px;">
+                <select name="identity" id="role" lay-filter="identity" lay-verify="required">
+                    <option value="none"></option>
+                    <option value="normal">普通用户</option>
+                    <option value="admin">物管员</option>
+                    <option value="both">物管员+普通用户</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="changeRole">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
 <!-- 行工具栏 -->
 <script type="text/html" id="itemBar">
     <a class="layui-btn layui-btn-xs" lay-event="delete">删除</a>
@@ -99,7 +134,7 @@
             ,page: true //开启分页
             ,cols: [[ //表头
                 {title: '序号', width:'5%', type: "numbers"}
-                ,{field: 'userid', title: '账号', width:'15%',edit:'text',sort: true}
+                ,{field: 'userid', title: '账号', width:'15%',sort: true}
                 ,{field: 'username', title: '用户名', width:'10%',edit:'text',sort: true}
                 ,{field: 'college', title: '学院', width:'15%',edit:'text', sort: true}
                 ,{field: 'department', title: '系别', width: '15%',edit:'text', sort: true}
@@ -127,7 +162,7 @@
             var data = obj.data; //获得当前行数据
             var layEvent = obj.event;
             if(data.userid == 'admin'){
-                layer.msg("管理员用户Admin不可被删除！");
+                layer.msg("Admin用户不可被修改权限或者被删除！");
                 return;
             }
             if(layEvent == 'delete'){ //删除
@@ -155,8 +190,12 @@
                     });
                     layer.close(index);
                 });
-            }else if(layEvent == "changePermission"){
-                layer.alert("功能尚未实现");
+            }else if(layEvent == "changePermission"){ //权限更改
+                var id = data.userid;
+                var uname = data.username;
+                document.getElementById('uid').value = id;
+                document.getElementById('uname').value = uname;
+                changeRole();
             }
         });
 
@@ -209,6 +248,31 @@
             });
             return false;
         });
+
+        //提交修改权限
+        form.on('submit(changeRole)', function(data){
+            console.log(data.field);
+            $.ajax({
+                url : "gmanager/changeRole",
+                type : 'post',
+                dataType : 'json',
+                data: data.field,
+                success : function(ret) {
+                    console.log(ret);
+                    if (ret){
+                        layer.msg("修改成功！");
+                        tableIns.reload({});
+                        layer.close(currentLayer);
+                    } else {
+                        layer.msg("出错了，修改失败");
+                    }
+                },
+                error : function(prm1, prm2, prm3) {
+                    layer.msg("false_" + prm1 + "_" + prm2 + "_" + prm3);
+                }
+            });
+            return false;
+        });
     });
 
 </script>
@@ -221,6 +285,15 @@
             title: '添加用户',
             area: ['650px', '500px'],
             content: layui.$('#addUserPanel')
+        });
+    }
+    //弹出修改权限窗口
+    function changeRole() {
+        currentLayer = layer.open({
+            type: 1,
+            title: '修改权限',
+            area: ['650px', '350px'],
+            content: layui.$('#changeUserRolePanel')
         });
     }
 </script>

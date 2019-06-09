@@ -1,15 +1,19 @@
 package goods.service.impl;
 
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.metadata.Sheet;
+import com.alibaba.excel.support.ExcelTypeEnum;
 import goods.mapper.*;
 import goods.pojo.*;
 import goods.service.InitService;
-import goods.vo.GraphBar;
-import goods.vo.GraphItem;
-import goods.vo.PageGoodsKind;
-import goods.vo.PageUserShow;
+import goods.vo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -203,5 +207,35 @@ public class InitServiceImpl implements InitService {
         return goodsKindMapper.insert(goodsKind) > 0;
     }
 
+    @Override
+    public OutputStream getExportModelFileOutputStream() {
+        OutputStream out = new ByteArrayOutputStream();
+        List<ExportModelFile> list = new LinkedList<>();
+        ExportModelFile demoFile = new ExportModelFile();
+        demoFile.setKind("橡皮擦");
+        demoFile.setName("xx橡皮擦");
+        demoFile.setBrand("晨光");
+        demoFile.setModel("");
+        demoFile.setParams("30*50mm");
+        demoFile.setUnit("只");
+        demoFile.setNumber("10");
+        list.add(demoFile);
 
+        try {
+            ExcelWriter writer = new ExcelWriter(out, ExcelTypeEnum.XLSX,true);
+            Sheet sheet1 = new Sheet(1, 0,ExportModelFile.class);
+            sheet1.setSheetName("添加库存");
+            writer.write(list, sheet1);
+            writer.finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return out;
+    }
 }

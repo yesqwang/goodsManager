@@ -108,8 +108,8 @@ public class PageGoodsStore {
         return goodsNumber;
     }
 
-    public void setGoodsNumber(int goodsNumber) {
-        this.goodsNumber = goodsNumber;
+    public void setGoodsNumber(Integer goodsNumber) {
+        this.goodsNumber = goodsNumber == null ? 0 : goodsNumber;
     }
 
     public String getGoodsUnit() {
@@ -124,16 +124,16 @@ public class PageGoodsStore {
         return borrowNumber;
     }
 
-    public void setBorrowNumber(int borrowNumber) {
-        this.borrowNumber = borrowNumber;
+    public void setBorrowNumber(Integer borrowNumber) {
+        this.borrowNumber = borrowNumber == null ? 0 : borrowNumber;
     }
 
     public int getGiveNumber() {
         return giveNumber;
     }
 
-    public void setGiveNumber(int giveNumber) {
-        this.giveNumber = giveNumber;
+    public void setGiveNumber(Integer giveNumber) {
+        this.giveNumber = giveNumber == null ? 0 : giveNumber;
     }
 
     @Override

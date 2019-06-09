@@ -50,4 +50,6 @@ public interface UserService {
     boolean updateUserMessage(PageUserShow userShow);
 
     boolean updateUserPassword(String userid, String oldpassword, String newpassword);
+
+    boolean changeRole(String userid, String identity);
 }

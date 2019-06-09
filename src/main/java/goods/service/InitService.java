@@ -7,6 +7,7 @@ import goods.vo.GraphItem;
 import goods.vo.PageGoodsKind;
 import goods.vo.PageUserShow;
 
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -58,4 +59,6 @@ public interface InitService {
     boolean deleteKinds(String name);
 
     boolean addKinds(PageGoodsKind kind);
+
+    OutputStream getExportModelFileOutputStream();
 }
